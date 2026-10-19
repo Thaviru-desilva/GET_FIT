@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/components :: head('Athlete Portal - ' + ${member.fullName})}"></head>
+<body>
+
+<div class="d-flex" id="wrapper">
+    <div th:replace="~{fragments/components :: sidebar('member-portal')}"></div>
+
+    <div class="main-content flex-grow-1 bg-light min-vh-100 d-flex flex-column">
+        <nav th:replace="~{fragments/components :: navbar}"></nav>
+
+        <div class="p-4 flex-grow-1">
+
+            <!-- Flash alerts -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Athlete Hero Welcome Banner -->
+            <div class="card shadow-sm mb-4 border-0 text-white" style="background: linear-gradient(135deg, #0d0d0f 0%, #1a1a24 100%); border-left: 4px solid #D4145A !important;">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow"
+                             style="width: 64px; height: 64px; font-size: 1.6rem; background: #D4145A;">
+                            <span th:text="${#strings.substring(member.firstName,0,1)} + ${#strings.substring(member.lastName,0,1)}">SM</span>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <h3 class="fw-bold m-0 text-white" th:text="'Hello, ' + ${member.firstName} + '!'">Hello Athlete!</h3>
+                                <span class="badge bg-danger px-3 py-1" th:text="${member.status}">ACTIVE</span>
+                                <span th:if="${activeSubscription != null}" class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50"
+                                      th:text="${activeSubscription.plan.name} + ' Member'">Gold Member</span>
+                            </div>
+                            <span class="text-light text-opacity-75 small">
+                                Member ID #<span th:text="${member.id}">1</span> &bull; Enrolled <span th:text="${member.joinDate}">2026-01-01</span>
+                                <span th:if="${member.assignedTrainer != null}"> &bull; Coach: <strong class="text-danger" th:text="${member.assignedTrainer.fullName}">Elena</strong></span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Action Shortcuts -->
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="button" class="btn btn-danger btn-sm px-3 shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#progressModal">
+                            <i class="bi bi-plus-circle"></i> Log Body Metrics
+                        </button>
+                        <button type="button" class="btn btn-outline-light btn-sm px-3 d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#memberReserveModal">
+                            <i class="bi bi-bookmark-plus"></i> Reserve Equipment
+                        </button>
+                        <a th:href="@{/classes}" class="btn btn-outline-light btn-sm px-3 d-flex align-items-center gap-1">
+                            <i class="bi bi-calendar-check"></i> Book Class
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Gym Floor & Limited Resources Status Banner -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6 col-lg-7">
+                    <div class="card shadow-sm border-0 h-100 p-3 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="spinner-grow spinner-grow-sm text-success" role="status"></span>
+                                <span class="fw-bold text-dark small text-uppercase">Live Gym Floor Occupancy</span>
+                            </div>
+                            <span class="badge px-3 py-1"
+                                  th:classappend="${floorOccupancyPercentage < 70 ? 'bg-success' : (floorOccupancyPercentage < 90 ? 'bg-warning text-dark' : 'bg-danger')}"
+                                  th:text="${floorOccupancy} + ' / ' + ${maxFloorCapacity} + ' Athletes (' + ${floorOccupancyPercentage} + '%)'">12 / 50</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar"
+                                 th:classappend="${floorOccupancyPercentage < 70 ? 'bg-success' : (floorOccupancyPercentage < 90 ? 'bg-warning' : 'bg-danger')}"
+                                 th:style="'width: ' + ${floorOccupancyPercentage} + '%;'"></div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small mt-2" style="font-size:0.75rem;">
+                            <span><i class="bi bi-shield-check text-success me-1"></i> Smooth training flow, no floor crowding</span>
+                            <span th:text="${daysRemaining} + ' days left on membership'">30 days left</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-5">
+                    <div class="card shadow-sm border-0 h-100 p-3 bg-white">
+                        <div class="fw-bold text-dark small text-uppercase mb-2">
+                            <i class="bi bi-box-seam text-danger me-1"></i> Key Station Availability
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <span th:each="r, iterStat : ${resources}" th:if="${iterStat.index < 4}"
+                                  class="badge bg-light text-dark border p-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                                <i class="bi" th:classappend="${r.categoryIcon}"></i>
+                                <span th:text="${r.name}">Rack</span>:
+                                <strong th:classappend="${r.availableQuantity > 0 ? 'text-success' : 'text-danger'}" th:text="${r.availableQuantity} + ' Free'">2 Free</strong>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User-Friendly Main Navigation Tabs -->
+            <ul class="nav nav-pills mb-4 nav-justified bg-white p-2 rounded shadow-sm gap-1" id="athletePortalTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active fw-bold py-2" id="tab-overview" data-bs-toggle="pill" data-bs-target="#pane-overview" type="button" role="tab">
+                        <i class="bi bi-speedometer2 me-1 text-danger"></i> Body Metrics &amp; Progress
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-bold py-2" id="tab-workout" data-bs-toggle="pill" data-bs-target="#pane-workout" type="button" role="tab">
+                        <i class="bi bi-lightning-charge-fill me-1 text-danger"></i> My Exercise Routine
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-bold py-2" id="tab-diet" data-bs-toggle="pill" data-bs-target="#pane-diet" type="button" role="tab">
+                        <i class="bi bi-apple me-1 text-success"></i> My Nutrition &amp; Diet
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-bold py-2" id="tab-resources" data-bs-toggle="pill" data-bs-target="#pane-resources" type="button" role="tab">
+                        <i class="bi bi-box-seam-fill me-1 text-primary"></i> Equipment Booking
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-bold py-2" id="tab-classes" data-bs-toggle="pill" data-bs-target="#pane-classes" type="button" role="tab">
+                        <i class="bi bi-calendar-week-fill me-1 text-warning-emphasis"></i> Classes &amp; Attendance
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content Panes -->
+            <div class="tab-content" id="athletePortalTabContent">
+
+                <!-- PANE 1: Body Metrics & Progress Tracker -->
+                <div class="tab-pane fade show active" id="pane-overview" role="tabpanel">
+                    <!-- Metrics Summary Row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="card shadow-sm border-0 p-3 text-center bg-white h-100">
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size:0.72rem;">Current Weight</small>
+                                <h3 class="fw-bold my-1 text-danger">
+                                    <span th:if="${latestProgress != null}" th:text="${latestProgress.weightKg} + ' kg'">--</span>
+                                    <span th:if="${latestProgress == null}">--</span>
+                                </h3>
+                                <small class="text-muted" style="font-size:0.7rem;">Body mass</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="card shadow-sm border-0 p-3 text-center bg-white h-100">
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size:0.72rem;">Height</small>
+                                <h3 class="fw-bold my-1 text-dark">
+                                    <span th:if="${latestProgress != null}" th:text="${latestProgress.heightCm} + ' cm'">--</span>
+                                    <span th:if="${latestProgress == null}">--</span>
+                                </h3>
+                                <small class="text-muted" style="font-size:0.7rem;">Stature</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="card shadow-sm border-0 p-3 text-center bg-white h-100">
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size:0.72rem;">BMI Index</small>
+                                <h3 class="fw-bold my-1 text-primary">
+                                    <span th:if="${latestProgress != null}" th:text="${latestProgress.bmi}">--</span>
+                                    <span th:if="${latestProgress == null}">--</span>
+                                </h3>
+                                <span th:if="${latestProgress != null}" class="badge bg-light text-dark border" style="font-size:0.68rem;" th:text="${latestProgress.bmiCategory}">Category</span>
+                                <span th:if="${latestProgress == null}" class="text-muted small">--</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="card shadow-sm border-0 p-3 text-center bg-white h-100">
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size:0.72rem;">Somatotype</small>
+                                <h5 class="fw-bold my-1 text-dark">
+                                    <span th:if="${latestProgress != null and latestProgress.bodyType != null}" th:text="${latestProgress.bodyType}">--</span>
+                                    <span th:if="${latestProgress == null or latestProgress.bodyType == null}">Not Set</span>
+                                </h5>
+                                <small class="text-muted" style="font-size:0.7rem;">Profile</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="card shadow-sm border-0 p-3 text-center bg-white h-100">
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size:0.72rem;">Training / Wk</small>
+                                <h3 class="fw-bold my-1 text-dark">
+                                    <span th:if="${latestProgress != null and latestProgress.workoutHoursPerWeek != null}" th:text="${latestProgress.workoutHoursPerWeek} + ' hrs'">--</span>
+                                    <span th:if="${latestProgress == null or latestProgress.workoutHoursPerWeek == null}">--</span>
+                                </h3>
+                                <small class="text-muted" style="font-size:0.7rem;">Dedication</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="card shadow-sm border-0 p-3 text-center bg-white h-100">
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size:0.72rem;">Body Fat %</small>
+                                <h3 class="fw-bold my-1 text-dark">
+                                    <span th:if="${latestProgress != null and latestProgress.bodyFatPercentage != null}" th:text="${latestProgress.bodyFatPercentage} + '%'">--</span>
+                                    <span th:if="${latestProgress == null or latestProgress.bodyFatPercentage == null}">--</span>
+                                </h3>
+                                <small class="text-muted" style="font-size:0.7rem;">Composition</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Transformation Journey & Log History -->
+                    <div class="card shadow-sm border-0 mb-4 bg-white">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-graph-up-arrow text-danger me-1"></i> Transformation Journey &amp; Milestones</h5>
+                                <small class="text-muted">Recorded progress over time by you and your coach</small>
+                            </div>
+                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#progressModal">
+                                <i class="bi bi-plus-lg me-1"></i> Update My Weight
+                            </button>
+                        </div>
+                        <div class="card-body p-4">
+                            <!-- Visual Progress Delta Highlight -->
+                            <div th:if="${#lists.size(progressList) > 1}" class="alert alert-info border-0 shadow-sm d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-trophy-fill fs-4 text-warning"></i>
+                                    <div>
+                                        <strong>Transformation Trend Active!</strong>
+                                        <div class="small">
+                                            Starting Baseline: <span class="fw-bold" th:text="${progressList[#lists.size(progressList) - 1].weightKg} + ' kg'">62.5 kg</span>
+                                            &rarr; Current: <span class="fw-bold text-danger" th:text="${progressList[0].weightKg} + ' kg'">59.8 kg</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="badge bg-primary px-3 py-2 fs-6">Milestone Active</span>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date Recorded</th>
+                                            <th>Weight</th>
+                                            <th>Height</th>
+                                            <th>BMI Index</th>
+                                            <th>Somatotype</th>
+                                            <th>Hours/Week</th>
+                                            <th>Body Fat %</th>
+                                            <th>Logged By</th>
+                                            <th>Notes &amp; Reflections</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${#lists.isEmpty(progressList)}">
+                                            <td colspan="9" class="text-center text-muted py-4">No progress entries recorded yet. Click "Update My Weight" to log your baseline!</td>
+                                        </tr>
+                                        <tr th:each="p : ${progressList}">
+                                            <td class="fw-semibold" th:text="${p.recordDate}">2026-01-01</td>
+                                            <td class="fw-bold text-danger fs-6" th:text="${p.weightKg} + ' kg'">62.0 kg</td>
+                                            <td th:text="${p.heightCm} + ' cm'">168 cm</td>
+                                            <td>
+                                                <strong th:text="${p.bmi}">22.0</strong>
+                                                <span class="badge bg-light text-dark border ms-1" th:text="${p.bmiCategory}">Normal</span>
+                                            </td>
+                                            <td th:text="${p.bodyType != null ? p.bodyType : '--'}">Mesomorph</td>
+                                            <td th:text="${p.workoutHoursPerWeek != null ? p.workoutHoursPerWeek + ' hrs' : '--'}">4.5 hrs</td>
+                                            <td th:text="${p.bodyFatPercentage != null ? p.bodyFatPercentage + '%' : '--'}">22%</td>
+                                            <td>
+                                                <span th:if="${p.loggedBy == 'TRAINER'}" class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">COACH</span>
+                                                <span th:if="${p.loggedBy != 'TRAINER'}" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">YOU</span>
+                                            </td>
+                                            <td class="text-muted small" th:text="${p.notes != null ? p.notes : '--'}">Notes</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PANE 2: My Workout Routine (Interactive Companion) -->
+                <div class="tab-pane fade" id="pane-workout" role="tabpanel">
+                    <div th:if="${activeWorkoutPlan != null}">
+                        <div class="card shadow-sm border-0 mb-4 bg-white">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h4 class="fw-bold text-dark mb-0" th:text="${activeWorkoutPlan.title}">4-Day Hypertrophy Routine</h4>
+                                        <span class="badge bg-danger" th:text="${activeWorkoutPlan.status}">ACTIVE</span>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        <span>Prescribed by Coach <strong class="text-dark" th:text="${activeWorkoutPlan.trainer.fullName}">Coach Elena</strong></span> &bull;
+                                        <span>Goal: <strong class="text-danger" th:text="${activeWorkoutPlan.fitnessGoal}">Hypertrophy</strong></span> &bull;
+                                        <span>Target Somatotype: <strong class="text-dark" th:text="${activeWorkoutPlan.targetBodyType}">Mesomorph</strong></span> &bull;
+                                        <span>Frequency: <strong class="text-dark" th:text="${activeWorkoutPlan.frequency}">4 Days / Week</strong></span>
+                                    </div>
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-calendar3 me-1"></i> Program Duration: <strong th:text="${activeWorkoutPlan.durationWeeks} + ' Weeks'">8 Weeks</strong>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <!-- Day by Day Routine Follow-Along -->
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h5 class="fw-bold text-dark mb-0">
+                                            <i class="bi bi-check2-square text-danger me-1"></i> Interactive Workout Schedule
+                                        </h5>
+                                        <small class="text-muted">Follow along during your gym session</small>
+                                    </div>
+                                    <div class="p-4 bg-light rounded border font-monospace" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.8;" th:text="${activeWorkoutPlan.scheduleDetails}">
+                                        Workout breakdown...
+                                    </div>
+                                </div>
+
+                                <!-- Coach's Technique & Recovery Guidance -->
+                                <div th:if="${activeWorkoutPlan.trainerAdvice != null and !activeWorkoutPlan.trainerAdvice.isEmpty()}">
+                                    <h6 class="fw-bold text-dark mb-2">
+                                        <i class="bi bi-chat-quote-fill text-danger me-1"></i> Coach's Technique &amp; Recovery Guidance
+                                    </h6>
+                                    <div class="p-3 bg-danger bg-opacity-10 text-dark rounded border border-danger border-opacity-25" style="white-space: pre-wrap; font-size: 0.9rem;" th:text="${activeWorkoutPlan.trainerAdvice}">
+                                        Advice...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${activeWorkoutPlan == null}" class="card shadow-sm border-0 p-5 text-center text-muted bg-white">
+                        <i class="bi bi-lightning-charge fs-1 d-block mb-3 text-danger"></i>
+                        <h4 class="fw-bold text-dark">No Active Workout Routine Prescribed Yet</h4>
+                        <p class="small text-muted max-w-500 mx-auto">Your personal coach is reviewing your physical metrics (weight, height, somatotype, training hours) and will publish your custom exercise split here shortly.</p>
+                    </div>
+                </div>
+
+                <!-- PANE 3: My Nutrition & Diet Plan -->
+                <div class="tab-pane fade" id="pane-diet" role="tabpanel">
+                    <div th:if="${activeDietPlan != null}">
+                        <div class="card shadow-sm border-0 mb-4 bg-white">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h4 class="fw-bold text-dark mb-0" th:text="${activeDietPlan.title}">Lean Recomposition Protocol</h4>
+                                        <span class="badge bg-success" th:text="${activeDietPlan.status}">ACTIVE</span>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        <span>Prescribed by Coach <strong class="text-dark" th:text="${activeDietPlan.trainer.fullName}">Elena</strong></span> &bull;
+                                        <span>Goal: <strong class="text-success" th:text="${activeDietPlan.dietaryGoal}">Fat Loss</strong></span>
+                                        <span th:if="${activeDietPlan.dietaryRestrictions != null and !activeDietPlan.dietaryRestrictions.isEmpty()}">
+                                            &bull; Restrictions: <strong class="badge bg-warning text-dark" th:text="${activeDietPlan.dietaryRestrictions}">None</strong>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-calendar3 me-1"></i> Prescribed on <span th:text="${activeDietPlan.startDate}">2026-01-01</span>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <!-- Macro Dashboard Cards -->
+                                <div class="row g-3 mb-4 text-center">
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-3 rounded bg-danger bg-opacity-10 border border-danger border-opacity-25 h-100">
+                                            <small class="text-muted d-block fw-bold" style="font-size:0.75rem;">TARGET ENERGY</small>
+                                            <h3 class="text-danger my-1 fw-bold" th:text="${activeDietPlan.targetCalories != null ? activeDietPlan.targetCalories + ' kcal' : 'N/A'}">2000 kcal</h3>
+                                            <small class="text-muted" style="font-size:0.7rem;">Daily budget</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-3 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25 h-100">
+                                            <small class="text-muted d-block fw-bold" style="font-size:0.75rem;">PROTEIN</small>
+                                            <h3 class="text-primary my-1 fw-bold" th:text="${activeDietPlan.proteinGrams != null ? activeDietPlan.proteinGrams + ' g' : 'N/A'}">150 g</h3>
+                                            <small class="text-muted" style="font-size:0.7rem;">Muscle repair</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <div class="p-3 rounded bg-warning bg-opacity-10 border border-warning border-opacity-25 h-100">
+                                            <small class="text-muted d-block fw-bold" style="font-size:0.75rem;">CARBOHYDRATES</small>
+                                            <h3 class="text-warning-emphasis my-1 fw-bold" th:text="${activeDietPlan.carbsGrams != null ? activeDietPlan.carbsGrams + ' g' : 'N/A'}">200 g</h3>
+                                            <small class="text-muted" style="font-size:0.7rem;">Workout fuel</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <div class="p-3 rounded bg-secondary bg-opacity-10 border border-secondary border-opacity-25 h-100">
+                                            <small class="text-muted d-block fw-bold" style="font-size:0.75rem;">HEALTHY FATS</small>
+                                            <h3 class="text-secondary my-1 fw-bold" th:text="${activeDietPlan.fatsGrams != null ? activeDietPlan.fatsGrams + ' g' : 'N/A'}">55 g</h3>
+                                            <small class="text-muted" style="font-size:0.7rem;">Hormonal support</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <div class="p-3 rounded bg-info bg-opacity-10 border border-info border-opacity-25 h-100">
+                                            <small class="text-muted d-block fw-bold" style="font-size:0.75rem;">WATER GOAL</small>
+                                            <h3 class="text-info my-1 fw-bold" th:text="${activeDietPlan.waterLiters != null ? activeDietPlan.waterLiters + ' L' : '3.0 L'}">3.0 L</h3>
+                                            <small class="text-muted" style="font-size:0.7rem;">Hydration target</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Interactive Hydration Tracker Widget -->
+                                <div class="p-3 bg-light rounded border mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-droplet-fill text-info fs-4"></i>
+                                        <div>
+                                            <strong class="text-dark small">Daily Hydration Tracker</strong>
+                                            <div class="text-muted small" style="font-size:0.75rem;">Click glasses as you drink through the day</div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2" id="hydrationGlasses">
+                                        <button type="button" class="btn btn-sm btn-outline-info rounded-circle" onclick="this.classList.toggle('btn-info'); this.classList.toggle('text-white');" title="250ml glass">
+                                            <i class="bi bi-cup-straw"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-info rounded-circle" onclick="this.classList.toggle('btn-info'); this.classList.toggle('text-white');" title="250ml glass">
+                                            <i class="bi bi-cup-straw"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-info rounded-circle" onclick="this.classList.toggle('btn-info'); this.classList.toggle('text-white');" title="250ml glass">
+                                            <i class="bi bi-cup-straw"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-info rounded-circle" onclick="this.classList.toggle('btn-info'); this.classList.toggle('text-white');" title="250ml glass">
+                                            <i class="bi bi-cup-straw"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-info rounded-circle" onclick="this.classList.toggle('btn-info'); this.classList.toggle('text-white');" title="250ml glass">
+                                            <i class="bi bi-cup-straw"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-info rounded-circle" onclick="this.classList.toggle('btn-info'); this.classList.toggle('text-white');" title="250ml glass">
+                                            <i class="bi bi-cup-straw"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Daily Meal Breakdown -->
+                                <div class="mb-4">
+                                    <h5 class="fw-bold text-dark mb-2">
+                                        <i class="bi bi-calendar-check text-success me-1"></i> Meal-by-Meal Schedule &amp; Ingredients
+                                    </h5>
+                                    <div class="p-4 bg-light rounded border font-monospace" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.8;" th:text="${activeDietPlan.mealBreakdown}">
+                                        Meal breakdown...
+                                    </div>
+                                </div>
+
+                                <!-- Supplementation Guidance -->
+                                <div th:if="${activeDietPlan.trainerNotes != null and !activeDietPlan.trainerNotes.isEmpty()}">
+                                    <h6 class="fw-bold text-dark mb-2">
+                                        <i class="bi bi-chat-quote-fill text-success me-1"></i> Coach's Supplementation &amp; Timing Guidance
+                                    </h6>
+                                    <div class="p-3 bg-success bg-opacity-10 text-dark rounded border border-success border-opacity-25" style="white-space: pre-wrap; font-size: 0.9rem;" th:text="${activeDietPlan.trainerNotes}">
+                                        Notes...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${activeDietPlan == null}" class="card shadow-sm border-0 p-5 text-center text-muted bg-white">
+                        <i class="bi bi-apple fs-1 d-block mb-3 text-success"></i>
+                        <h4 class="fw-bold text-dark">No Nutrition Plan Prescribed Yet</h4>
+                        <p class="small text-muted max-w-500 mx-auto">Your coach will provide an individualized dietary protocol, macro calculations, and meal plans tailored to your body type and target goals.</p>
+                    </div>
+                </div>
+
+                <!-- PANE 4: Equipment & Limited Resources Booking -->
+                <div class="tab-pane fade" id="pane-resources" role="tabpanel">
+                    <div class="card shadow-sm border-0 mb-4 bg-white">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-box-seam-fill text-primary me-1"></i> Gym Equipment Availability &amp; Booking</h5>
+                                <small class="text-muted">Reserve limited machines or private pods ahead of your workout</small>
+                            </div>
+                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#memberReserveModal">
+                                <i class="bi bi-bookmark-plus me-1"></i> Reserve Equipment
+                            </button>
+                        </div>
+                        <div class="card-body p-4">
+                            <!-- Live Resource Cards Grid -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6 col-lg-3" th:each="r : ${resources}">
+                                    <div class="card h-100 border p-3">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="bg-primary bg-opacity-10 text-primary rounded p-2" style="width:36px; height:36px; display:flex; align-items:center; justify-content:center;">
+                                                <i class="bi" th:classappend="${r.categoryIcon}"></i>
+                                            </div>
+                                            <span class="badge" th:classappend="${r.statusBadgeClass}" th:text="${r.status}">AVAILABLE</span>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1" th:text="${r.name}">Olympic Squat Rack</h6>
+                                        <span class="text-muted small mb-2 d-block" th:text="${r.location}">Free Weights</span>
+                                        <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong th:classappend="${r.availableQuantity > 0 ? 'text-success' : 'text-danger'}"
+                                                        th:text="${r.availableQuantity} + ' / ' + ${r.totalQuantity}">2/3</strong>
+                                                <small class="text-muted">Free</small>
+                                            </div>
+                                            <button th:if="${r.availableQuantity > 0 and r.status != 'MAINTENANCE'}" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#memberReserveModal"
+                                                    th:attr="data-resource-id=${r.id}"
+                                                    onclick="prefillMemberResource(this.getAttribute('data-resource-id'))">
+                                                Book
+                                            </button>
+                                            <span th:if="${r.availableQuantity == 0 or r.status == 'MAINTENANCE'}" class="text-muted small">Busy</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- My Reservations Table -->
+                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-calendar2-check text-primary me-1"></i> My Equipment Reservations</h6>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Station / Equipment</th>
+                                            <th>Location</th>
+                                            <th>Date &amp; Time Window</th>
+                                            <th>Workout Purpose</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${#lists.isEmpty(resourceBookings)}">
+                                            <td colspan="6" class="text-center text-muted py-4">You have no active equipment reservations. Click "Reserve Equipment" to secure your station!</td>
+                                        </tr>
+                                        <tr th:each="rb : ${resourceBookings}">
+                                            <td>
+                                                <strong class="text-dark" th:text="${rb.resource.name}">Squat Rack</strong>
+                                            </td>
+                                            <td th:text="${rb.resource.location}">Zone</td>
+                                            <td>
+                                                <span class="fw-semibold" th:text="${rb.bookingDate}">2026-01-01</span>
+                                                <small class="text-muted d-block" th:text="${rb.startTime} + ' - ' + ${rb.endTime}">16:00 - 17:00</small>
+                                            </td>
+                                            <td class="text-muted small" th:text="${rb.purpose != null ? rb.purpose : 'Personal workout'}">Purpose</td>
+                                            <td>
+                                                <span class="badge" th:classappend="${rb.status == 'CONFIRMED' ? 'bg-success' : 'bg-secondary'}" th:text="${rb.status}">CONFIRMED</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <form th:if="${rb.status == 'CONFIRMED'}" th:action="@{'/member/resources/cancel/' + ${rb.id}}" method="post" style="display:inline;">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel this equipment booking?');">
+                                                        <i class="bi bi-x-circle"></i> Cancel
+                                                    </button>
+                                                </form>
+                                                <span th:if="${rb.status != 'CONFIRMED'}" class="text-muted small">&mdash;</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PANE 5: Classes & Attendance History -->
+                <div class="tab-pane fade" id="pane-classes" role="tabpanel">
+                    <!-- Enrolled Classes -->
+                    <div class="card shadow-sm border-0 mb-4 bg-white">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-calendar-check text-primary me-1"></i> My Enrolled Classes</h5>
+                            <a th:href="@{/classes}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1"></i> Browse Class Schedule
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Class Session</th>
+                                            <th>Coach</th>
+                                            <th>Schedule Days &amp; Time</th>
+                                            <th>Studio / Room</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${#lists.isEmpty(bookings)}">
+                                            <td colspan="6" class="text-center text-muted py-4">You have not enrolled in any fitness classes yet.</td>
+                                        </tr>
+                                        <tr th:each="b : ${bookings}">
+                                            <td class="fw-semibold text-dark" th:text="${b.gymClass.name}">Class Name</td>
+                                            <td>
+                                                <span class="badge bg-light text-dark border" th:text="${b.gymClass.trainer.fullName}">Coach</span>
+                                            </td>
+                                            <td>
+                                                <div class="fw-semibold small" th:text="${b.gymClass.dayOfWeek}">Days</div>
+                                                <div class="text-muted small" th:text="${b.gymClass.startTime} + ' - ' + ${b.gymClass.endTime}">Time</div>
+                                            </td>
+                                            <td th:text="${b.gymClass.room}">Studio</td>
+                                            <td>
+                                                <span th:if="${b.status == 'CONFIRMED'}" class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">CONFIRMED SPOT</span>
+                                                <span th:if="${b.status == 'CANCELLED'}" class="badge bg-secondary">CANCELLED</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <form th:if="${b.status == 'CONFIRMED'}" th:action="@{'/classes/cancel-booking/' + ${b.id}}" method="post" style="display:inline;">
+                                                    <input type="hidden" name="redirectUrl" value="/member/portal">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel this class booking?');">
+                                                        <i class="bi bi-x-circle"></i> Cancel
+                                                    </button>
+                                                </form>
+                                                <span th:if="${b.status != 'CONFIRMED'}" class="text-muted small">&mdash;</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Facility Check-in Log -->
+                    <div class="card shadow-sm border-0 bg-white">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history text-primary me-1"></i> My Facility Check-In History</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Check-In Time</th>
+                                            <th>Check-Out Time</th>
+                                            <th>Workout Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${#lists.isEmpty(attendances)}">
+                                            <td colspan="4" class="text-center text-muted py-4">No gym attendance check-ins logged yet.</td>
+                                        </tr>
+                                        <tr th:each="att : ${attendances}">
+                                            <td class="fw-semibold" th:text="${att.date}">2026-01-01</td>
+                                            <td th:text="${att.checkInTime}">00:00</td>
+                                            <td>
+                                                <span th:if="${att.checkOutTime != null}" th:text="${att.checkOutTime}">00:00</span>
+                                                <span th:if="${att.checkOutTime == null}" class="badge bg-success">In Facility Now</span>
+                                            </td>
+                                            <td class="text-muted small" th:text="${att.notes != null ? att.notes : 'General workout session'}">Notes</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <footer th:replace="~{fragments/components :: footer}"></footer>
+    </div>
+</div>
+
+<!-- Modal: Update Progress -->
+<div class="modal fade" id="progressModal" tabindex="-1" aria-labelledby="progressModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="progressModalLabel"><i class="bi bi-speedometer2 me-1"></i> Update My Physical Metrics &amp; Progress</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form th:action="@{/member/progress/save}" method="post">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Current Weight (kg) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.1" name="weightKg" class="form-control" placeholder="e.g. 61.5" required
+                                   th:value="${newProgress.weightKg != null ? newProgress.weightKg : (latestProgress != null ? latestProgress.weightKg : '')}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Height (cm) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.5" name="heightCm" class="form-control" placeholder="e.g. 168.0" required
+                                   th:value="${newProgress.heightCm != null ? newProgress.heightCm : (latestProgress != null ? latestProgress.heightCm : '')}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Somatotype</label>
+                            <select name="bodyType" class="form-select">
+                                <option value="Mesomorph" th:selected="${newProgress.bodyType == 'Mesomorph' or (latestProgress != null and latestProgress.bodyType == 'Mesomorph')}">Mesomorph (Athletic / Muscular)</option>
+                                <option value="Ectomorph" th:selected="${newProgress.bodyType == 'Ectomorph' or (latestProgress != null and latestProgress.bodyType == 'Ectomorph')}">Ectomorph (Lean / Fast Metabolism)</option>
+                                <option value="Endomorph" th:selected="${newProgress.bodyType == 'Endomorph' or (latestProgress != null and latestProgress.bodyType == 'Endomorph')}">Endomorph (Higher Mass / Slow Metabolism)</option>
+                                <option value="Athletic / Mixed" th:selected="${newProgress.bodyType == 'Athletic / Mixed' or (latestProgress != null and latestProgress.bodyType == 'Athletic / Mixed')}">Athletic / Mixed</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Workout Hours / Week</label>
+                            <input type="number" step="0.5" name="workoutHoursPerWeek" class="form-control" placeholder="e.g. 4.5"
+                                   th:value="${newProgress.workoutHoursPerWeek != null ? newProgress.workoutHoursPerWeek : (latestProgress != null ? latestProgress.workoutHoursPerWeek : '')}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Body Fat % (Optional)</label>
+                            <input type="number" step="0.1" name="bodyFatPercentage" class="form-control" placeholder="e.g. 21.0"
+                                   th:value="${newProgress.bodyFatPercentage != null ? newProgress.bodyFatPercentage : ''}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Target Fitness Goal</label>
+                            <input type="text" name="targetGoal" class="form-control" placeholder="e.g. Lean Muscle Tone"
+                                   th:value="${newProgress.targetGoal != null ? newProgress.targetGoal : (latestProgress != null ? latestProgress.targetGoal : '')}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Personal Notes &amp; Reflections</label>
+                            <textarea name="notes" rows="2" class="form-control" placeholder="How did you feel during workouts this week? Any new Personal Records (PRs)?"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger px-4"><i class="bi bi-save me-1"></i> Save Updated Metrics</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Member Reserve Equipment -->
+<div class="modal fade" id="memberReserveModal" tabindex="-1" aria-labelledby="memberReserveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="memberReserveModalLabel"><i class="bi bi-box-seam me-1"></i> Reserve Gym Station / Machine</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form th:action="@{/member/resources/reserve}" method="post">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Select Equipment <span class="text-danger">*</span></label>
+                        <select name="resourceId" id="memberResourceId" class="form-select" required>
+                            <option th:each="r : ${resources}" th:if="${r.availableQuantity > 0 and r.status != 'MAINTENANCE'}"
+                                    th:value="${r.id}" th:text="${r.name} + ' (' + ${r.availableQuantity} + ' available - ' + ${r.location} + ')'"></option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Date</label>
+                            <input type="date" name="bookingDate" class="form-control" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Start Time <span class="text-danger">*</span></label>
+                            <input type="time" name="startTime" class="form-control" value="17:00" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Workout Purpose</label>
+                        <input type="text" name="purpose" class="form-control" placeholder="e.g. Squat routine from my exercise plan">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger px-4"><i class="bi bi-check2-circle me-1"></i> Confirm Equipment Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function prefillMemberResource(resourceId) {
+        const select = document.getElementById('memberResourceId');
+        if (select && resourceId) {
+            select.value = resourceId;
+        }
+    }
+</script>
+
+</body>
+</html>

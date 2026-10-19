@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/components :: head('My Prescribed Plans - Coach Portal')}"></head>
+<body>
+
+<div class="d-flex" id="wrapper">
+    <div th:replace="~{fragments/components :: sidebar('trainer-plans')}"></div>
+
+    <div class="main-content flex-grow-1 bg-light min-vh-100 d-flex flex-column">
+        <nav th:replace="~{fragments/components :: navbar}"></nav>
+
+        <div class="p-4 flex-grow-1">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1">Prescribed Exercise &amp; Diet Plans</h3>
+                    <p class="text-muted small mb-0">Overview of all personalized workout routines and nutrition guidelines prescribed to your athletes.</p>
+                </div>
+                <div>
+                    <a th:href="@{/trainer/dashboard}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-speedometer2"></i> Coach Portal
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 border-start border-4 border-danger p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size:0.75rem;">Total Workout Plans</small>
+                                <h3 class="fw-bold my-1 text-danger" th:text="${#lists.size(workoutPlans)}">0</h3>
+                                <span class="text-muted small">Active &amp; past exercise routines</span>
+                            </div>
+                            <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                                <i class="bi bi-lightning-charge-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 border-start border-4 border-success p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size:0.75rem;">Total Diet Plans</small>
+                                <h3 class="fw-bold my-1 text-success" th:text="${#lists.size(dietPlans)}">0</h3>
+                                <span class="text-muted small">Active &amp; past nutrition protocols</span>
+                            </div>
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                                <i class="bi bi-apple"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-4" id="coachPlansTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active fw-semibold" id="all-workouts-tab" data-bs-toggle="tab" data-bs-target="#all-workouts" type="button" role="tab">
+                        <i class="bi bi-lightning-charge-fill text-danger me-1"></i> Workout Plans (<span th:text="${#lists.size(workoutPlans)}">0</span>)
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-semibold" id="all-diets-tab" data-bs-toggle="tab" data-bs-target="#all-diets" type="button" role="tab">
+                        <i class="bi bi-apple text-success me-1"></i> Diet &amp; Nutrition Plans (<span th:text="${#lists.size(dietPlans)}">0</span>)
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="coachPlansContent">
+                <!-- Workout Plans Tab -->
+                <div class="tab-pane fade show active" id="all-workouts" role="tabpanel">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Athlete</th>
+                                            <th>Plan Title</th>
+                                            <th>Fitness Goal</th>
+                                            <th>Somatotype</th>
+                                            <th>Frequency</th>
+                                            <th>Duration</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Manage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${#lists.isEmpty(workoutPlans)}">
+                                            <td colspan="8" class="text-center text-muted py-5">
+                                                <i class="bi bi-journal-x fs-1 d-block mb-2 text-danger"></i>
+                                                You have not created any workout plans yet.
+                                            </td>
+                                        </tr>
+                                        <tr th:each="wp : ${workoutPlans}">
+                                            <td>
+                                                <a th:href="@{'/trainer/members/' + ${wp.member.id} + '/plans'}" class="fw-semibold text-dark text-decoration-none" th:text="${wp.member.fullName}">Athlete</a>
+                                                <small class="text-muted d-block" th:text="${wp.member.email}">email</small>
+                                            </td>
+                                            <td>
+                                                <span class="fw-semibold" th:text="${wp.title}">Plan Title</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark border" th:text="${wp.fitnessGoal}">Goal</span>
+                                            </td>
+                                            <td th:text="${wp.targetBodyType}">Mesomorph</td>
+                                            <td th:text="${wp.frequency}">4 Days / Wk</td>
+                                            <td th:text="${wp.durationWeeks} + ' Weeks'">8 Weeks</td>
+                                            <td>
+                                                <span class="badge bg-danger" th:text="${wp.status}">ACTIVE</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <a th:href="@{'/trainer/members/' + ${wp.member.id} + '/plans'}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-eye"></i> View Details
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diet Plans Tab -->
+                <div class="tab-pane fade" id="all-diets" role="tabpanel">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Athlete</th>
+                                            <th>Plan Title</th>
+                                            <th>Dietary Goal</th>
+                                            <th>Calories</th>
+                                            <th>Macros (P / C / F)</th>
+                                            <th>Restrictions</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Manage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${#lists.isEmpty(dietPlans)}">
+                                            <td colspan="8" class="text-center text-muted py-5">
+                                                <i class="bi bi-journal-x fs-1 d-block mb-2 text-success"></i>
+                                                You have not created any diet plans yet.
+                                            </td>
+                                        </tr>
+                                        <tr th:each="dp : ${dietPlans}">
+                                            <td>
+                                                <a th:href="@{'/trainer/members/' + ${dp.member.id} + '/plans'}" class="fw-semibold text-dark text-decoration-none" th:text="${dp.member.fullName}">Athlete</a>
+                                                <small class="text-muted d-block" th:text="${dp.member.email}">email</small>
+                                            </td>
+                                            <td>
+                                                <span class="fw-semibold" th:text="${dp.title}">Plan Title</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark border" th:text="${dp.dietaryGoal}">Goal</span>
+                                            </td>
+                                            <td>
+                                                <strong class="text-danger" th:text="${dp.targetCalories} + ' kcal'">2000 kcal</strong>
+                                            </td>
+                                            <td class="small">
+                                                <span class="text-primary fw-semibold" th:text="${dp.proteinGrams} + 'g P'"></span> /
+                                                <span class="text-warning-emphasis fw-semibold" th:text="${dp.carbsGrams} + 'g C'"></span> /
+                                                <span class="text-secondary fw-semibold" th:text="${dp.fatsGrams} + 'g F'"></span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-warning text-dark" th:text="${dp.dietaryRestrictions != null and !dp.dietaryRestrictions.isEmpty() ? dp.dietaryRestrictions : 'None'}">None</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success" th:text="${dp.status}">ACTIVE</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <a th:href="@{'/trainer/members/' + ${dp.member.id} + '/plans'}" class="btn btn-sm btn-outline-success">
+                                                    <i class="bi bi-eye"></i> View Details
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer th:replace="~{fragments/components :: footer}"></footer>
+    </div>
+</div>
+
+</body>
+</html>

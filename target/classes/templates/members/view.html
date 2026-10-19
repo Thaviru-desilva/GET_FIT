@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/components :: head(${member.fullName})}"></head>
+<body>
+
+<div class="d-flex" id="wrapper">
+    <div th:replace="~{fragments/components :: sidebar('members')}"></div>
+
+    <div class="main-content flex-grow-1 bg-light min-vh-100 d-flex flex-column">
+        <nav th:replace="~{fragments/components :: navbar}"></nav>
+
+        <div class="p-4 flex-grow-1">
+            <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <a th:href="@{/members}" class="text-decoration-none text-muted small">&larr; Back to Member List</a>
+                    <h3 class="fw-bold mt-1" th:text="${member.fullName}">Member Details</h3>
+                </div>
+                <div class="d-flex gap-2">
+                    <a th:href="@{'/trainer/members/' + ${member.id} + '/plans'}" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-clipboard2-pulse"></i> Exercise &amp; Diet Plans
+                    </a>
+                    <a th:href="@{'/subscriptions/new?memberId=' + ${member.id}}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-receipt"></i> Assign New Plan
+                    </a>
+                    <a th:href="@{'/members/edit/' + ${member.id}}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil"></i> Edit Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Profile Info Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle fw-bold d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                                <span th:text="${#strings.substring(member.firstName,0,1)} + ${#strings.substring(member.lastName,0,1)}">JD</span>
+                            </div>
+                            <h4 class="fw-bold mb-1" th:text="${member.fullName}">John Doe</h4>
+                            <p class="text-muted small mb-3" th:text="${member.email}">john@example.com</p>
+
+                            <div class="mb-3">
+                                <span th:if="${member.status.name() == 'ACTIVE'}" class="badge bg-success px-3 py-2">ACTIVE MEMBER</span>
+                                <span th:if="${member.status.name() == 'INACTIVE'}" class="badge bg-secondary px-3 py-2">INACTIVE</span>
+                                <span th:if="${member.status.name() == 'EXPIRED'}" class="badge bg-danger px-3 py-2">EXPIRED</span>
+                                <span th:if="${member.status.name() == 'PENDING'}" class="badge bg-warning px-3 py-2">PENDING</span>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div class="text-start">
+                                <div class="mb-2">
+                                    <small class="text-muted d-block">Phone Number</small>
+                                    <span class="fw-semibold" th:text="${member.phone != null and !member.phone.isEmpty() ? member.phone : 'Not provided'}"></span>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted d-block">Gender &amp; Birthday</small>
+                                    <span class="fw-semibold" th:text="(${member.gender != null ? member.gender : 'Unspecified'}) + ' &bull; ' + (${member.dateOfBirth != null ? member.dateOfBirth : 'N/A'})"></span>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted d-block">Member Since</small>
+                                    <span class="fw-semibold" th:text="${member.joinDate}">2026-01-01</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white">
+                            <i class="bi bi-person-badge text-primary me-1"></i> Assigned Personal Trainer
+                        </div>
+                        <div class="card-body p-4">
+                            <div th:if="${member.assignedTrainer != null}">
+                                <h5 class="fw-bold mb-1" th:text="${member.assignedTrainer.fullName}">Trainer Name</h5>
+                                <div class="badge bg-primary bg-opacity-10 text-primary mb-3" th:text="${member.assignedTrainer.specialization}">Specialization</div>
+                                <div class="small mb-2">
+                                    <span class="text-muted">Experience:</span>
+                                    <span class="fw-semibold" th:text="${member.assignedTrainer.experienceYears} + ' years'">5 years</span>
+                                </div>
+                                <div class="small mb-2">
+                                    <span class="text-muted">Contact:</span>
+                                    <span class="fw-semibold" th:text="${member.assignedTrainer.phone}">+1-555</span>
+                                </div>
+                                <div class="small">
+                                    <span class="text-muted">Email:</span>
+                                    <span class="fw-semibold" th:text="${member.assignedTrainer.email}">email</span>
+                                </div>
+                            </div>
+                            <div th:if="${member.assignedTrainer == null}" class="text-center text-muted py-4">
+                                <i class="bi bi-person-slash fs-2 d-block mb-2"></i>
+                                No trainer assigned yet.
+                                <div class="mt-2">
+                                    <a th:href="@{'/members/edit/' + ${member.id}}" class="btn btn-sm btn-outline-primary">Assign Trainer</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white">
+                            <i class="bi bi-telephone-plus text-danger me-1"></i> Emergency Contact
+                        </div>
+                        <div class="card-body p-4">
+                            <div th:if="${member.emergencyContactName != null and !member.emergencyContactName.isEmpty()}">
+                                <h5 class="fw-bold mb-1" th:text="${member.emergencyContactName}">Contact Name</h5>
+                                <p class="text-muted small">Designated emergency contact</p>
+                                <div class="p-3 bg-light rounded border">
+                                    <small class="text-muted d-block">Phone</small>
+                                    <a th:href="'tel:' + ${member.emergencyContactPhone}" class="fw-bold text-danger text-decoration-none" th:text="${member.emergencyContactPhone}"></a>
+                                </div>
+                            </div>
+                            <div th:if="${member.emergencyContactName == null or member.emergencyContactName.isEmpty()}" class="text-center text-muted py-4">
+                                <i class="bi bi-exclamation-circle fs-2 d-block mb-2"></i>
+                                No emergency contact on file.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <!-- Physical Metrics & Prescribed Fitness Plans Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <span class="fw-semibold"><i class="bi bi-speedometer2 text-danger me-1"></i> Athlete Physical Metrics &amp; Prescribed Plans</span>
+                    <a th:href="@{'/trainer/members/' + ${member.id} + '/plans'}" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-pencil-square"></i> Prescribe / Manage Plans
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Metrics row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="p-2 bg-light rounded border text-center">
+                                <small class="text-muted d-block" style="font-size:0.7rem;">CURRENT WEIGHT</small>
+                                <strong class="text-danger" th:text="${latestProgress != null ? latestProgress.weightKg + ' kg' : '--'}">--</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="p-2 bg-light rounded border text-center">
+                                <small class="text-muted d-block" style="font-size:0.7rem;">HEIGHT</small>
+                                <strong class="text-dark" th:text="${latestProgress != null ? latestProgress.heightCm + ' cm' : '--'}">--</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="p-2 bg-light rounded border text-center">
+                                <small class="text-muted d-block" style="font-size:0.7rem;">BMI</small>
+                                <strong class="text-primary" th:text="${latestProgress != null ? latestProgress.bmi : '--'}">--</strong>
+                                <small class="d-block text-muted" style="font-size:0.65rem;" th:text="${latestProgress != null ? latestProgress.bmiCategory : '--'}">--</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="p-2 bg-light rounded border text-center">
+                                <small class="text-muted d-block" style="font-size:0.7rem;">SOMATOTYPE</small>
+                                <strong class="text-dark" th:text="${latestProgress != null and latestProgress.bodyType != null ? latestProgress.bodyType : '--'}">--</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="p-2 bg-light rounded border text-center">
+                                <small class="text-muted d-block" style="font-size:0.7rem;">TRAINING HRS/WK</small>
+                                <strong class="text-dark" th:text="${latestProgress != null and latestProgress.workoutHoursPerWeek != null ? latestProgress.workoutHoursPerWeek + ' hrs' : '--'}">--</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="p-2 bg-light rounded border text-center">
+                                <small class="text-muted d-block" style="font-size:0.7rem;">BODY FAT %</small>
+                                <strong class="text-dark" th:text="${latestProgress != null and latestProgress.bodyFatPercentage != null ? latestProgress.bodyFatPercentage + '%' : '--'}">--</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Plans summary preview -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded border h-100">
+                                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-lightning-charge-fill text-danger me-1"></i> Active Exercise Plan</h6>
+                                <div th:if="${!#lists.isEmpty(workoutPlans)}">
+                                    <div class="fw-semibold text-danger" th:text="${workoutPlans[0].title}">Title</div>
+                                    <small class="text-muted d-block" th:text="'Goal: ' + ${workoutPlans[0].fitnessGoal} + ' &bull; ' + ${workoutPlans[0].frequency}">Details</small>
+                                    <div class="mt-2">
+                                        <a th:href="@{'/trainer/members/' + ${member.id} + '/plans'}" class="btn btn-sm btn-link p-0 text-decoration-none">View Full Routine &rarr;</a>
+                                    </div>
+                                </div>
+                                <div th:if="${#lists.isEmpty(workoutPlans)}" class="text-muted small py-2">
+                                    No workout plans prescribed yet.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded border h-100">
+                                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-apple text-success me-1"></i> Active Nutrition Plan</h6>
+                                <div th:if="${!#lists.isEmpty(dietPlans)}">
+                                    <div class="fw-semibold text-success" th:text="${dietPlans[0].title}">Title</div>
+                                    <small class="text-muted d-block" th:text="'Target: ' + ${dietPlans[0].targetCalories} + ' kcal &bull; ' + ${dietPlans[0].dietaryGoal}">Details</small>
+                                    <div class="mt-2">
+                                        <a th:href="@{'/trainer/members/' + ${member.id} + '/plans'}" class="btn btn-sm btn-link p-0 text-decoration-none text-success">View Full Diet Protocol &rarr;</a>
+                                    </div>
+                                </div>
+                                <div th:if="${#lists.isEmpty(dietPlans)}" class="text-muted small py-2">
+                                    No diet plans prescribed yet.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscriptions Tab Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold"><i class="bi bi-receipt text-primary me-1"></i> Subscriptions &amp; Billing History</span>
+                    <a th:href="@{'/subscriptions/new?memberId=' + ${member.id}}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus-lg"></i> Add Plan
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Plan Tier</th>
+                                    <th>Duration</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Amount</th>
+                                    <th>Payment Status</th>
+                                    <th>Plan Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(subscriptions)}">
+                                    <td colspan="7" class="text-center text-muted py-4">No active or past subscriptions found.</td>
+                                </tr>
+                                <tr th:each="sub : ${subscriptions}">
+                                    <td class="fw-semibold" th:text="${sub.plan.name}">Gold</td>
+                                    <td th:text="${sub.plan.durationDays} + ' days'">30 days</td>
+                                    <td th:text="${sub.startDate}">2026-01-01</td>
+                                    <td th:text="${sub.endDate}">2026-02-01</td>
+                                    <td class="fw-semibold" th:text="'$' + ${#numbers.formatDecimal(sub.amountPaid, 1, 2)}">$0.00</td>
+                                    <td>
+                                        <span class="badge bg-success" th:text="${sub.paymentStatus}">PAID</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${sub.status.name() == 'ACTIVE'}" class="badge bg-primary">ACTIVE</span>
+                                        <span th:if="${sub.status.name() == 'EXPIRED'}" class="badge bg-danger">EXPIRED</span>
+                                        <span th:if="${sub.status.name() == 'CANCELLED'}" class="badge bg-secondary">CANCELLED</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance History Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <i class="bi bi-clock-history text-primary me-1"></i> Member Attendance &amp; Workout Log
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Check-In</th>
+                                    <th>Check-Out</th>
+                                    <th>Workout Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(attendances)}">
+                                    <td colspan="4" class="text-center text-muted py-4">No attendance check-ins logged yet.</td>
+                                </tr>
+                                <tr th:each="att : ${attendances}">
+                                    <td class="fw-semibold" th:text="${att.date}">2026-01-01</td>
+                                    <td th:text="${att.checkInTime}">08:00</td>
+                                    <td>
+                                        <span th:if="${att.checkOutTime != null}" th:text="${att.checkOutTime}">09:00</span>
+                                        <span th:if="${att.checkOutTime == null}" class="badge bg-success">In Progress</span>
+                                    </td>
+                                    <td class="text-muted" th:text="${att.notes != null ? att.notes : 'General workout'}">Notes</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer th:replace="~{fragments/components :: footer}"></footer>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/components :: head('Athlete Plans & Progress - ' + ${member.fullName})}"></head>
+<body>
+
+<div class="d-flex" id="wrapper">
+    <div th:replace="~{fragments/components :: sidebar('trainer-dash')}"></div>
+
+    <div class="main-content flex-grow-1 bg-light min-vh-100 d-flex flex-column">
+        <nav th:replace="~{fragments/components :: navbar}"></nav>
+
+        <div class="p-4 flex-grow-1">
+            <!-- Flash alerts -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-1"></i> <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Page Navigation & Member Header -->
+            <div class="mb-3">
+                <a th:href="@{/trainer/dashboard}" class="text-decoration-none text-muted small">&larr; Back to Coach Dashboard</a>
+            </div>
+
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                            <span th:text="${#strings.substring(member.firstName,0,1)} + ${#strings.substring(member.lastName,0,1)}">SM</span>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h4 class="fw-bold m-0" th:text="${member.fullName}">Athlete Name</h4>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" th:text="${member.status}">ACTIVE</span>
+                            </div>
+                            <span class="text-muted small" th:text="${member.email} + ' &bull; ' + ${member.phone} + ' &bull; Enrolled ' + ${member.joinDate}">Contact</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a th:href="@{'/trainer/members/' + ${member.id} + '/workout-plan/new'}" class="btn btn-danger btn-sm d-flex align-items-center gap-1">
+                            <i class="bi bi-lightning-charge-fill"></i> Prescribe Exercise Plan
+                        </a>
+                        <a th:href="@{'/trainer/members/' + ${member.id} + '/diet-plan/new'}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1">
+                            <i class="bi bi-apple"></i> Prescribe Diet Plan
+                        </a>
+                        <button type="button" class="btn btn-outline-dark btn-sm d-flex align-items-center gap-1" data-bs-toggle="collapse" data-bs-target="#progressFormCollapse">
+                            <i class="bi bi-speedometer2"></i> Log Assessment
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Athlete's Current Body Metrics Overview -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="card shadow-sm h-100 border-0 p-3 text-center">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Weight</small>
+                        <h4 class="fw-bold my-1 text-danger">
+                            <span th:if="${latestProgress != null}" th:text="${latestProgress.weightKg} + ' kg'">-- kg</span>
+                            <span th:if="${latestProgress == null}">--</span>
+                        </h4>
+                        <span class="text-muted small" style="font-size: 0.7rem;">Body mass</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="card shadow-sm h-100 border-0 p-3 text-center">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Height</small>
+                        <h4 class="fw-bold my-1 text-dark">
+                            <span th:if="${latestProgress != null}" th:text="${latestProgress.heightCm} + ' cm'">-- cm</span>
+                            <span th:if="${latestProgress == null}">--</span>
+                        </h4>
+                        <span class="text-muted small" style="font-size: 0.7rem;">Stature</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="card shadow-sm h-100 border-0 p-3 text-center">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">BMI Index</small>
+                        <h4 class="fw-bold my-1" th:classappend="${latestProgress != null and latestProgress.bmiCategory == 'Normal Weight' ? 'text-success' : 'text-primary'}">
+                            <span th:if="${latestProgress != null}" th:text="${latestProgress.bmi}">--</span>
+                            <span th:if="${latestProgress == null}">--</span>
+                        </h4>
+                        <span th:if="${latestProgress != null}" class="badge bg-light text-dark border" style="font-size: 0.68rem;" th:text="${latestProgress.bmiCategory}">Category</span>
+                        <span th:if="${latestProgress == null}" class="text-muted small" style="font-size: 0.7rem;">N/A</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="card shadow-sm h-100 border-0 p-3 text-center">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Body Somatotype</small>
+                        <h5 class="fw-bold my-1 text-dark">
+                            <span th:if="${latestProgress != null and latestProgress.bodyType != null}" th:text="${latestProgress.bodyType}">Mesomorph</span>
+                            <span th:if="${latestProgress == null or latestProgress.bodyType == null}">Not Set</span>
+                        </h5>
+                        <span class="text-muted small" style="font-size: 0.7rem;">Metabolic profile</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="card shadow-sm h-100 border-0 p-3 text-center">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Weekly Training</small>
+                        <h4 class="fw-bold my-1 text-dark">
+                            <span th:if="${latestProgress != null and latestProgress.workoutHoursPerWeek != null}" th:text="${latestProgress.workoutHoursPerWeek} + ' hrs'">--</span>
+                            <span th:if="${latestProgress == null or latestProgress.workoutHoursPerWeek == null}">--</span>
+                        </h4>
+                        <span class="text-muted small" style="font-size: 0.7rem;">Hours / week</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <div class="card shadow-sm h-100 border-0 p-3 text-center">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Body Fat %</small>
+                        <h4 class="fw-bold my-1 text-dark">
+                            <span th:if="${latestProgress != null and latestProgress.bodyFatPercentage != null}" th:text="${latestProgress.bodyFatPercentage} + '%'">--</span>
+                            <span th:if="${latestProgress == null or latestProgress.bodyFatPercentage == null}">--</span>
+                        </h4>
+                        <span class="text-muted small" style="font-size: 0.7rem;">Estimated</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collapsible: Log Assessment Form -->
+            <div class="collapse mb-4" id="progressFormCollapse">
+                <div class="card shadow-sm border-danger">
+                    <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold"><i class="bi bi-clipboard2-pulse me-1"></i> Log Athlete Progress &amp; Assessment</span>
+                        <small>Recorded as Coach</small>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{'/trainer/members/' + ${member.id} + '/progress/save'}" method="post">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold">Current Weight (kg) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.1" name="weightKg" class="form-control" placeholder="e.g. 68.5" required
+                                           th:value="${latestProgress != null ? latestProgress.weightKg : ''}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold">Height (cm) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.5" name="heightCm" class="form-control" placeholder="e.g. 172.0" required
+                                           th:value="${latestProgress != null ? latestProgress.heightCm : ''}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold">Body Somatotype</label>
+                                    <select name="bodyType" class="form-select">
+                                        <option value="Mesomorph" th:selected="${latestProgress != null and latestProgress.bodyType == 'Mesomorph'}">Mesomorph (Athletic / High Response)</option>
+                                        <option value="Ectomorph" th:selected="${latestProgress != null and latestProgress.bodyType == 'Ectomorph'}">Ectomorph (Lean / Fast Metabolism)</option>
+                                        <option value="Endomorph" th:selected="${latestProgress != null and latestProgress.bodyType == 'Endomorph'}">Endomorph (Higher Mass / Slow Metabolism)</option>
+                                        <option value="Athletic / Mixed" th:selected="${latestProgress != null and latestProgress.bodyType == 'Athletic / Mixed'}">Athletic / Mixed Profile</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold">Workout Hours / Week</label>
+                                    <input type="number" step="0.5" name="workoutHoursPerWeek" class="form-control" placeholder="e.g. 4.5"
+                                           th:value="${latestProgress != null ? latestProgress.workoutHoursPerWeek : ''}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold">Body Fat % (Optional)</label>
+                                    <input type="number" step="0.1" name="bodyFatPercentage" class="form-control" placeholder="e.g. 19.5"
+                                           th:value="${latestProgress != null ? latestProgress.bodyFatPercentage : ''}">
+                                </div>
+                                <div class="col-md-9">
+                                    <label class="form-label small fw-semibold">Primary Target Goal</label>
+                                    <input type="text" name="targetGoal" class="form-control" placeholder="e.g. Hypertrophy &amp; Core Definition"
+                                           th:value="${latestProgress != null ? latestProgress.targetGoal : ''}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold">Assessment Notes &amp; Observations</label>
+                                    <textarea name="notes" rows="2" class="form-control" placeholder="Physical observations, mobility notes, strength changes..."></textarea>
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-bs-toggle="collapse" data-bs-target="#progressFormCollapse">Cancel</button>
+                                    <button type="submit" class="btn btn-danger btn-sm px-4">
+                                        <i class="bi bi-save me-1"></i> Save Assessment
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabbed View: Plans & Progress History -->
+            <ul class="nav nav-tabs mb-4" id="plansTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active fw-semibold" id="workouts-tab" data-bs-toggle="tab" data-bs-target="#workouts-pane" type="button" role="tab">
+                        <i class="bi bi-lightning-charge-fill text-danger me-1"></i> Prescribed Exercise Plans (<span th:text="${#lists.size(workoutPlans)}">0</span>)
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-semibold" id="diets-tab" data-bs-toggle="tab" data-bs-target="#diets-pane" type="button" role="tab">
+                        <i class="bi bi-apple text-success me-1"></i> Prescribed Diet &amp; Nutrition Plans (<span th:text="${#lists.size(dietPlans)}">0</span>)
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-semibold" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-pane" type="button" role="tab">
+                        <i class="bi bi-clock-history text-primary me-1"></i> Progress Metric Logs (<span th:text="${#lists.size(progressList)}">0</span>)
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="plansTabContent">
+                <!-- Tab 1: Workout Plans -->
+                <div class="tab-pane fade show active" id="workouts-pane" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">Custom Exercise Routines</h5>
+                        <a th:href="@{'/trainer/members/' + ${member.id} + '/workout-plan/new'}" class="btn btn-danger btn-sm">
+                            <i class="bi bi-plus-circle me-1"></i> Prescribe New Routine
+                        </a>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(workoutPlans)}" class="card shadow-sm border-0 p-5 text-center text-muted">
+                        <i class="bi bi-lightning fs-1 d-block mb-2 text-danger"></i>
+                        No exercise plans prescribed yet for this athlete.
+                        <div class="mt-3">
+                            <a th:href="@{'/trainer/members/' + ${member.id} + '/workout-plan/new'}" class="btn btn-outline-danger btn-sm">
+                                Create Tailored Workout Plan
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row g-4" th:if="${!#lists.isEmpty(workoutPlans)}">
+                        <div class="col-12" th:each="plan : ${workoutPlans}">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <div>
+                                        <span class="badge bg-danger me-2" th:text="${plan.status}">ACTIVE</span>
+                                        <h5 class="fw-bold d-inline align-middle mb-0" th:text="${plan.title}">Plan Title</h5>
+                                    </div>
+                                    <div class="text-muted small">
+                                        <i class="bi bi-calendar3 me-1"></i> Starts <span th:text="${plan.startDate}">2026-01-01</span>
+                                        <span th:if="${plan.endDate != null}" th:text="' &rarr; ' + ${plan.endDate}"> &rarr; 2026-03-01</span>
+                                    </div>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-3">
+                                            <span class="text-muted small d-block">Fitness Goal:</span>
+                                            <strong class="text-dark" th:text="${plan.fitnessGoal != null ? plan.fitnessGoal : 'General Fitness'}">Goal</strong>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <span class="text-muted small d-block">Target Somatotype:</span>
+                                            <strong class="text-dark" th:text="${plan.targetBodyType != null ? plan.targetBodyType : 'All'}">Body Type</strong>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <span class="text-muted small d-block">Training Frequency:</span>
+                                            <strong class="text-dark" th:text="${plan.frequency != null ? plan.frequency : '4 Days / Week'}">4 Days / Week</strong>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <span class="text-muted small d-block">Program Duration:</span>
+                                            <strong class="text-dark" th:text="${plan.durationWeeks} + ' Weeks'">8 Weeks</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">
+                                            <i class="bi bi-list-task text-danger me-1"></i> Weekly Exercise Routine &amp; Schedule
+                                        </h6>
+                                        <div class="p-3 bg-light rounded border" style="white-space: pre-wrap; font-family: inherit; font-size: 0.9rem;" th:text="${plan.scheduleDetails}">
+                                            Daily exercises, sets, and reps...
+                                        </div>
+                                    </div>
+
+                                    <div th:if="${plan.trainerAdvice != null and !plan.trainerAdvice.isEmpty()}">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">
+                                            <i class="bi bi-chat-left-quote text-danger me-1"></i> Coach's Recovery &amp; Intensity Guidance
+                                        </h6>
+                                        <div class="p-3 bg-danger bg-opacity-10 text-dark rounded border border-danger border-opacity-25 small" style="white-space: pre-wrap;" th:text="${plan.trainerAdvice}">
+                                            Warmup notes, rest periods, guidance...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Diet Plans -->
+                <div class="tab-pane fade" id="diets-pane" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">Custom Nutrition &amp; Diet Protocols</h5>
+                        <a th:href="@{'/trainer/members/' + ${member.id} + '/diet-plan/new'}" class="btn btn-danger btn-sm">
+                            <i class="bi bi-plus-circle me-1"></i> Prescribe New Diet Plan
+                        </a>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(dietPlans)}" class="card shadow-sm border-0 p-5 text-center text-muted">
+                        <i class="bi bi-apple fs-1 d-block mb-2 text-success"></i>
+                        No nutrition or diet plans prescribed yet for this athlete.
+                        <div class="mt-3">
+                            <a th:href="@{'/trainer/members/' + ${member.id} + '/diet-plan/new'}" class="btn btn-outline-danger btn-sm">
+                                Create Tailored Nutrition Plan
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row g-4" th:if="${!#lists.isEmpty(dietPlans)}">
+                        <div class="col-12" th:each="plan : ${dietPlans}">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <div>
+                                        <span class="badge bg-success me-2" th:text="${plan.status}">ACTIVE</span>
+                                        <h5 class="fw-bold d-inline align-middle mb-0" th:text="${plan.title}">Diet Plan Title</h5>
+                                    </div>
+                                    <div class="text-muted small">
+                                        <i class="bi bi-calendar3 me-1"></i> Prescribed on <span th:text="${plan.startDate}">2026-01-01</span>
+                                    </div>
+                                </div>
+                                <div class="card-body p-4">
+                                    <!-- Nutrition Macro Badges Row -->
+                                    <div class="row g-2 mb-4 text-center">
+                                        <div class="col-6 col-md-3">
+                                            <div class="p-2 rounded bg-danger bg-opacity-10 border border-danger border-opacity-25">
+                                                <small class="text-muted d-block" style="font-size:0.75rem;">TARGET ENERGY</small>
+                                                <strong class="text-danger fs-5" th:text="${plan.targetCalories != null ? plan.targetCalories + ' kcal' : 'N/A'}">2000 kcal</strong>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <div class="p-2 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25">
+                                                <small class="text-muted d-block" style="font-size:0.75rem;">PROTEIN</small>
+                                                <strong class="text-primary fs-5" th:text="${plan.proteinGrams != null ? plan.proteinGrams + ' g' : 'N/A'}">150 g</strong>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-2">
+                                            <div class="p-2 rounded bg-warning bg-opacity-10 border border-warning border-opacity-25">
+                                                <small class="text-muted d-block" style="font-size:0.75rem;">CARBS</small>
+                                                <strong class="text-warning-emphasis fs-5" th:text="${plan.carbsGrams != null ? plan.carbsGrams + ' g' : 'N/A'}">200 g</strong>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-2">
+                                            <div class="p-2 rounded bg-secondary bg-opacity-10 border border-secondary border-opacity-25">
+                                                <small class="text-muted d-block" style="font-size:0.75rem;">FATS</small>
+                                                <strong class="text-secondary fs-5" th:text="${plan.fatsGrams != null ? plan.fatsGrams + ' g' : 'N/A'}">55 g</strong>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-2">
+                                            <div class="p-2 rounded bg-info bg-opacity-10 border border-info border-opacity-25">
+                                                <small class="text-muted d-block" style="font-size:0.75rem;">WATER</small>
+                                                <strong class="text-info fs-5" th:text="${plan.waterLiters != null ? plan.waterLiters + ' L' : '3.0 L'}">3.0 L</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="d-flex gap-3 mb-2 small">
+                                            <div><strong>Goal:</strong> <span th:text="${plan.dietaryGoal}">Goal</span></div>
+                                            <div th:if="${plan.dietaryRestrictions != null and !plan.dietaryRestrictions.isEmpty()}">
+                                                <strong>Restrictions:</strong> <span class="badge bg-warning text-dark" th:text="${plan.dietaryRestrictions}">None</span>
+                                            </div>
+                                        </div>
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">
+                                            <i class="bi bi-card-checklist text-success me-1"></i> Daily Meal Breakdown
+                                        </h6>
+                                        <div class="p-3 bg-light rounded border" style="white-space: pre-wrap; font-family: inherit; font-size: 0.9rem;" th:text="${plan.mealBreakdown}">
+                                            Breakfast, Lunch, Dinner...
+                                        </div>
+                                    </div>
+
+                                    <div th:if="${plan.trainerNotes != null and !plan.trainerNotes.isEmpty()}">
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-2">
+                                            <i class="bi bi-chat-left-quote text-success me-1"></i> Supplementation &amp; Hydration Guidance
+                                        </h6>
+                                        <div class="p-3 bg-success bg-opacity-10 text-dark rounded border border-success border-opacity-25 small" style="white-space: pre-wrap;" th:text="${plan.trainerNotes}">
+                                            Supplements, timing...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: History -->
+                <div class="tab-pane fade" id="history-pane" role="tabpanel">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0">Progress Metrics &amp; Body History</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date Recorded</th>
+                                            <th>Weight</th>
+                                            <th>Height</th>
+                                            <th>BMI</th>
+                                            <th>Somatotype</th>
+                                            <th>Workout Hrs/Wk</th>
+                                            <th>Body Fat %</th>
+                                            <th>Logged By</th>
+                                            <th>Notes &amp; Observations</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${#lists.isEmpty(progressList)}">
+                                            <td colspan="9" class="text-center text-muted py-4">No progress logs recorded yet.</td>
+                                        </tr>
+                                        <tr th:each="p : ${progressList}">
+                                            <td class="fw-semibold" th:text="${p.recordDate}">2026-01-01</td>
+                                            <td class="fw-bold text-danger" th:text="${p.weightKg} + ' kg'">65.0 kg</td>
+                                            <td th:text="${p.heightCm} + ' cm'">170 cm</td>
+                                            <td>
+                                                <span class="fw-bold" th:text="${p.bmi}">22.5</span>
+                                                <small class="badge bg-light text-dark border ms-1" th:text="${p.bmiCategory}">Normal</small>
+                                            </td>
+                                            <td th:text="${p.bodyType != null ? p.bodyType : '--'}">Mesomorph</td>
+                                            <td th:text="${p.workoutHoursPerWeek != null ? p.workoutHoursPerWeek + ' hrs' : '--'}">4.0 hrs</td>
+                                            <td th:text="${p.bodyFatPercentage != null ? p.bodyFatPercentage + '%' : '--'}">--</td>
+                                            <td>
+                                                <span th:if="${p.loggedBy == 'TRAINER'}" class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">COACH</span>
+                                                <span th:if="${p.loggedBy != 'TRAINER'}" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">ATHLETE</span>
+                                            </td>
+                                            <td class="text-muted small" th:text="${p.notes != null ? p.notes : '--'}">Notes</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer th:replace="~{fragments/components :: footer}"></footer>
+    </div>
+</div>
+
+</body>
+</html>

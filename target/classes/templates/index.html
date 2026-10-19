@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Get U Fit - Colombo's Premier Fitness Destination</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/landing.css}">
+</head>
+<body>
+
+<header class="nav" id="nav">
+    <div class="nav-inner">
+        <a th:href="@{/}" class="logo" aria-label="Get U Fit Gym home">
+            <svg viewBox="0 0 32 32" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+                <path d="M4 12v8M8 9v14M28 12v8M24 9v14M8 16h16"/>
+            </svg>
+            <span class="logo-text"><b>GET U FIT</b><i>GYM</i></span>
+        </a>
+
+        <nav aria-label="Main">
+            <ul class="menu" id="menu">
+                <li><a href="#home" class="active">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#memberships">Memberships</a></li>
+                <li><a href="#classes">Classes</a></li>
+                <li><a href="#trainers">Trainers</a></li>
+                <li><a href="#location">Location</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+
+        <div class="nav-actions">
+            <!-- For Guests -->
+            <div sec:authorize="isAnonymous()" class="d-flex align-items-center" style="display:flex;gap:12px;align-items:center;">
+                <a th:href="@{/login}" class="btn-login">Login</a>
+                <a href="#memberships" class="btn btn-red">Join Now <span aria-hidden="true">&rarr;</span></a>
+            </div>
+
+            <!-- For Logged-in Users -->
+            <div sec:authorize="isAuthenticated()" class="d-flex align-items-center" style="display:flex;gap:12px;align-items:center;">
+                <a th:href="@{/default}" class="btn btn-red">
+                    <span sec:authorize="hasAuthority('ROLE_ADMIN')">Admin Dashboard &rarr;</span>
+                    <span sec:authorize="hasAuthority('ROLE_TRAINER')">Coach Portal &rarr;</span>
+                    <span sec:authorize="hasAuthority('ROLE_MEMBER')">Member Portal &rarr;</span>
+                </a>
+                <form th:action="@{/logout}" method="post" style="display:inline;">
+                    <button type="submit" class="btn-login" style="background:none;border:1px solid rgba(255,255,255,.3);color:#fff;cursor:pointer;">Logout</button>
+                </form>
+            </div>
+
+            <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><span></span></button>
+        </div>
+    </div>
+</header>
+
+<main>
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-inner">
+            <p class="eyebrow">Colombo's premier fitness destination</p>
+            <h1>Transform<br>Your Body.<br><span class="red">Strengthen</span><br>Your Life.</h1>
+            <p class="lead">Get U Fit is Colombo's dedicated fitness centre offering professional training, modern equipment, and a community built to help you succeed.</p>
+            <div class="cta">
+                <a href="#memberships" class="btn btn-red">Join Now <span aria-hidden="true">&rarr;</span></a>
+                <a href="#memberships" class="btn btn-outline">Explore Memberships</a>
+                <a th:href="@{/classes}" class="btn btn-outline" style="background:rgba(212,20,90,.15);border-color:var(--red);">View Class Schedule</a>
+            </div>
+        </div>
+        <a href="#about" class="scroll" aria-label="Scroll to About"><span>Scroll</span><i></i></a>
+    </section>
+
+    <!-- About Section -->
+    <section class="section about" id="about">
+        <div class="wrap">
+            <div>
+                <h2>A Gym Built Around Your Goals</h2>
+                <p class="sub">Get U Fit is an established fitness centre located in Colombo, Sri Lanka. We offer a comprehensive range of gym facilities, group fitness classes, and one-on-one trainer support, all under one roof.</p>
+                <p class="sub">Whether you're just starting your fitness journey or looking to take your performance to the next level, our team and facilities are here to support every step of the way.</p>
+            </div>
+            <ul class="checks">
+                <li>Professional gym facilities and modern strength equipment</li>
+                <li>Diverse group fitness class timetable &amp; online booking</li>
+                <li>Certified personal trainers &amp; dedicated nutrition coaches</li>
+                <li>Dedicated women's fitness programme &amp; conditioning</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Classes Section -->
+    <section class="section" id="classes">
+        <div class="wrap">
+            <div class="classes-head">
+                <h2>Classes for Every Goal</h2>
+                <a th:href="@{/classes}" class="btn btn-outline" style="font-size:11px;padding:13px 26px">View All Classes &rarr;</a>
+            </div>
+            <div class="grid">
+                <article class="card">
+                    <span class="ico" aria-hidden="true">🏋️</span>
+                    <h3>Strength Training</h3>
+                    <p>Build muscle and increase power through structured resistance and weight training programmes.</p>
+                </article>
+                <article class="card">
+                    <span class="ico" aria-hidden="true">🔥</span>
+                    <h3>Weight Loss</h3>
+                    <p>High-energy cardio and interval sessions designed to accelerate fat loss and improve endurance.</p>
+                </article>
+                <article class="card">
+                    <span class="ico" aria-hidden="true">🏃</span>
+                    <h3>Fitness Training</h3>
+                    <p>General conditioning classes covering agility, stamina, and full-body functional fitness.</p>
+                </article>
+                <article class="card">
+                    <span class="ico" aria-hidden="true">🎯</span>
+                    <h3>Personal Training</h3>
+                    <p>One-on-one sessions with a certified trainer tailored to your specific goals and fitness level.</p>
+                </article>
+                <article class="card">
+                    <span class="ico" aria-hidden="true">🧘</span>
+                    <h3>Yoga &amp; Mobility</h3>
+                    <p>Improve flexibility, balance, and mental wellbeing through guided yoga and mindfulness sessions.</p>
+                </article>
+                <article class="card women">
+                    <span class="ico" aria-hidden="true">👩</span>
+                    <h3>Women's Special Classes</h3>
+                    <p>A dedicated programme of fitness classes designed exclusively for women in a supportive environment.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Memberships Section -->
+    <section class="section about" id="memberships">
+        <div class="wrap">
+            <h2>Membership Packages</h2>
+            <p class="sub">Pick the plan that fits your schedule. Longer plans cost less per month.</p>
+            <div class="plans" id="plans">
+                <!-- Dynamically rendered plans from database -->
+                <article th:each="p : ${plans}" class="plan" th:classappend="${p.name.contains('Annual') or p.name.contains('Standard')} ? 'best' : ''">
+                    <h3 th:text="${p.name}">Plan Name</h3>
+                    <div class="dur" th:text="${p.durationDays} + ' Days Validity'">Duration</div>
+                    <div class="price">
+                        <span th:text="'Rs. ' + ${#numbers.formatDecimal(p.price, 1, 'COMMA', 0, 'POINT')}">Rs. 5,000</span>
+                        <small th:text="'Approx. Rs. ' + ${#numbers.formatDecimal(p.price / (p.durationDays / 30.0), 1, 'COMMA', 0, 'POINT')} + ' / mo'"></small>
+                    </div>
+                    <p th:text="${p.description}">Description</p>
+                    <a th:href="@{/login}" class="btn btn-outline">Join now</a>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trainers Section -->
+    <section class="section" id="trainers">
+        <div class="wrap">
+            <div class="classes-head">
+                <div>
+                    <h2>Our Certified Trainers</h2>
+                    <p class="sub">Work directly with Colombo's top coaches and conditioning experts.</p>
+                </div>
+                <a th:href="@{/login}" class="btn btn-outline" style="font-size:11px;padding:13px 26px">Meet the Coaches</a>
+            </div>
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+                <article class="card" th:each="t : ${trainers}">
+                    <span class="ico" aria-hidden="true">⚡</span>
+                    <h3 th:text="${t.fullName}">Coach Name</h3>
+                    <div style="color:var(--red);font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:12px;letter-spacing:1px;" th:text="${t.specialization}">Specialization</div>
+                    <p th:text="${t.experienceYears} + ' years professional coaching experience in elite fitness, hypertrophy, and functional strength.'"></p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact & Location Section -->
+    <section class="section contact" id="contact">
+        <div class="wrap">
+            <div>
+                <h2>Get in Touch</h2>
+                <p class="sub">Have a question about memberships, classes, or joining? Our team is happy to help. Reach out below or visit us at the gym.</p>
+            </div>
+            <div class="info">
+                <div id="location" style="scroll-margin-top:120px">
+                    <h3>Find us</h3>
+                    <address>195 2/3, Galle - Colombo Rd,<br>Colombo 4, Colombo 00400, Sri Lanka</address>
+                    <a class="btn btn-outline" href="https://www.google.com/maps/place/Get+U+Fit+Gym/@6.8893828,79.854483,17z/data=!4m6!3m5!1s0x3ae25bdc9747f611:0xeb6882fef3d01b83!8m2!3d6.8893828!4d79.857045" target="_blank" rel="noopener">Get directions</a>
+                </div>
+                <div>
+                    <h3>Call us</h3>
+                    <a class="tel" href="tel:+94112503339">011 250 3339</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer>&copy; <span id="yr"></span> Get U Fit Gym, Colombo &bull; Colombo 4, Sri Lanka</footer>
+
+<script>
+    const nav = document.getElementById('nav');
+    const burger = document.getElementById('burger');
+    const menu = document.getElementById('menu');
+    document.getElementById('yr').textContent = new Date().getFullYear();
+
+    const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, {passive:true});
+
+    burger.addEventListener('click', () => {
+        const open = menu.classList.toggle('open');
+        burger.setAttribute('aria-expanded', open);
+    });
+    menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+        menu.classList.remove('open');
+        burger.setAttribute('aria-expanded', 'false');
+    }));
+</script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/components :: head('Prescribe Diet Plan - ' + ${member.fullName})}"></head>
+<body>
+
+<div class="d-flex" id="wrapper">
+    <div th:replace="~{fragments/components :: sidebar('trainer-dash')}"></div>
+
+    <div class="main-content flex-grow-1 bg-light min-vh-100 d-flex flex-column">
+        <nav th:replace="~{fragments/components :: navbar}"></nav>
+
+        <div class="p-4 flex-grow-1">
+            <!-- Breadcrumbs -->
+            <div class="mb-3">
+                <a th:href="@{'/trainer/members/' + ${member.id} + '/plans'}" class="text-decoration-none text-muted small">&larr; Back to Athlete Plans</a>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1">Prescribe Nutrition &amp; Diet Plan</h3>
+                    <p class="text-muted small mb-0">Craft a bespoke nutritional guideline and meal breakdown tailored to <strong th:text="${member.fullName}">Athlete</strong>'s metabolism and body metrics.</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Left: Athlete Metrics Reference Card -->
+                <div class="col-lg-4">
+                    <div class="card shadow-sm border-0 sticky-top" style="top: 80px;">
+                        <div class="card-header bg-success text-white py-3">
+                            <h6 class="fw-bold mb-0"><i class="bi bi-person-lines-fill me-1"></i> Athlete Physical Profile</h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                                <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 48px; height: 48px; font-size: 1.25rem;">
+                                    <span th:text="${#strings.substring(member.firstName,0,1)} + ${#strings.substring(member.lastName,0,1)}">JD</span>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold mb-0" th:text="${member.fullName}">Athlete Name</h5>
+                                    <small class="text-muted" th:text="${member.gender != null ? member.gender : 'Unspecified'}">Gender</small>
+                                </div>
+                            </div>
+
+                            <div th:if="${latestProgress != null}">
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light rounded border text-center">
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">WEIGHT</small>
+                                            <strong class="text-danger" th:text="${latestProgress.weightKg} + ' kg'">65 kg</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light rounded border text-center">
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">HEIGHT</small>
+                                            <strong class="text-dark" th:text="${latestProgress.heightCm} + ' cm'">170 cm</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light rounded border text-center">
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">BMI</small>
+                                            <strong class="text-primary" th:text="${latestProgress.bmi}">22.5</strong>
+                                            <small class="d-block text-muted" style="font-size:0.65rem;" th:text="${latestProgress.bmiCategory}">Normal</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light rounded border text-center">
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">SOMATOTYPE</small>
+                                            <strong class="text-dark" th:text="${latestProgress.bodyType != null ? latestProgress.bodyType : 'Not set'}">Mesomorph</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light rounded border text-center">
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">TRAINING HRS</small>
+                                            <strong class="text-dark" th:text="${latestProgress.workoutHoursPerWeek != null ? latestProgress.workoutHoursPerWeek + ' hrs/wk' : '--'}">4 hrs</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light rounded border text-center">
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">BODY FAT</small>
+                                            <strong class="text-dark" th:text="${latestProgress.bodyFatPercentage != null ? latestProgress.bodyFatPercentage + '%' : '--'}">--</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 bg-light rounded border small mb-2">
+                                    <span class="text-muted d-block fw-semibold mb-1">Target Goal:</span>
+                                    <span class="text-dark" th:text="${latestProgress.targetGoal != null and !latestProgress.targetGoal.isEmpty() ? latestProgress.targetGoal : 'General Fitness & Conditioning'}">Goal</span>
+                                </div>
+
+                                <div class="p-3 bg-light rounded border small" th:if="${latestProgress.notes != null and !latestProgress.notes.isEmpty()}">
+                                    <span class="text-muted d-block fw-semibold mb-1">Latest Athlete Notes:</span>
+                                    <em class="text-muted" th:text="${latestProgress.notes}">Notes</em>
+                                </div>
+                            </div>
+
+                            <div th:if="${latestProgress == null}" class="text-center text-muted py-4">
+                                <i class="bi bi-speedometer2 fs-2 d-block mb-2"></i>
+                                No previous metric assessments recorded yet.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Diet Plan Form -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-apple text-success me-1"></i> Nutrition Protocol &amp; Macros</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <form th:action="@{'/trainer/members/' + ${member.id} + '/diet-plan/save'}" th:object="${dietPlan}" method="post">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Diet Plan Title <span class="text-danger">*</span></label>
+                                        <input type="text" th:field="*{title}" class="form-control" placeholder="e.g. Lean Recomposition &amp; High Protein Fuel" required>
+                                        <div class="text-danger small" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Dietary Goal</label>
+                                        <select th:field="*{dietaryGoal}" class="form-select">
+                                            <option value="Lean Muscle &amp; Fat Recomposition">Lean Muscle &amp; Fat Recomposition</option>
+                                            <option value="Fat Loss &amp; Caloric Deficit">Fat Loss &amp; Caloric Deficit</option>
+                                            <option value="Hypertrophy Mass &amp; Clean Bulk">Hypertrophy Mass &amp; Clean Bulk</option>
+                                            <option value="Endurance &amp; Athletic Performance">Endurance &amp; Athletic Performance</option>
+                                            <option value="Metabolic Maintenance">Metabolic Maintenance</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Dietary Restrictions / Allergies</label>
+                                        <input type="text" th:field="*{dietaryRestrictions}" class="form-control" placeholder="e.g. Dairy-Sensitive, Gluten-Free, Halal, None">
+                                    </div>
+
+                                    <!-- Macronutrient Row -->
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold text-danger">Target Calories (kcal)</label>
+                                        <input type="number" th:field="*{targetCalories}" class="form-control" placeholder="e.g. 2100">
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold text-primary">Protein (grams)</label>
+                                        <input type="number" th:field="*{proteinGrams}" class="form-control" placeholder="e.g. 150">
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-semibold text-warning-emphasis">Carbs (g)</label>
+                                        <input type="number" th:field="*{carbsGrams}" class="form-control" placeholder="e.g. 200">
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-semibold text-secondary">Fats (g)</label>
+                                        <input type="number" th:field="*{fatsGrams}" class="form-control" placeholder="e.g. 55">
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-semibold text-info">Water (L/day)</label>
+                                        <input type="number" step="0.1" th:field="*{waterLiters}" class="form-control" placeholder="3.0">
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Daily Meal-by-Meal Breakdown <span class="text-danger">*</span></label>
+                                        <div class="text-muted small mb-2">Outline portions and food choices for Breakfast, Mid-Morning Snack, Lunch, Pre/Post-Workout, and Dinner.</div>
+                                        <textarea th:field="*{mealBreakdown}" rows="10" class="form-control font-monospace" style="font-size: 0.88rem;"
+                                                  placeholder="• Breakfast (07:30):
+  - 70g Rolled Oats with unsweetened almond milk
+  - 1 scoop Whey/Plant Isolate Protein
+  - 1 tbsp Chia seeds &amp; 1/2 cup fresh berries
+
+• Mid-Morning Boost (10:30):
+  - 2 Boiled organic eggs
+  - 1 Medium green apple + 12 raw almonds
+
+• Lunch (13:00):
+  - 160g Grilled chicken breast (or pan-seared tofu)
+  - 1 cup Steamed brown jasmine rice
+  - 1.5 cups Steamed broccoli and carrots with 1 tsp olive oil
+
+• Pre-Workout Fuel (16:15):
+  - 2 Rice cakes with 1 tbsp peanut butter + 1 banana + black coffee
+
+• Dinner (19:30):
+  - 180g Baked wild salmon (or white fish)
+  - 150g Sweet potato mash + large mixed leafy salad"></textarea>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Supplementation &amp; Hydration Guidance</label>
+                                        <textarea th:field="*{trainerNotes}" rows="4" class="form-control"
+                                                  placeholder="Daily water intake reminders, creatine timing, multivitamin, sleep hygiene guidance..."></textarea>
+                                    </div>
+
+                                    <div class="col-12 d-flex justify-content-between align-items-center pt-3 border-top">
+                                        <a th:href="@{'/trainer/members/' + ${member.id} + '/plans'}" class="btn btn-outline-secondary">
+                                            Cancel
+                                        </a>
+                                        <button type="submit" class="btn btn-danger px-4">
+                                            <i class="bi bi-check2-circle me-1"></i> Save &amp; Assign Diet Plan
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer th:replace="~{fragments/components :: footer}"></footer>
+    </div>
+</div>
+
+</body>
+</html>

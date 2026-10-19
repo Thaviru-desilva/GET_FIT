@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/components :: head('Prescribe Exercise Plan - ' + ${member.fullName})}"></head>
+<body>
+
+<div class="d-flex" id="wrapper">
+    <div th:replace="~{fragments/components :: sidebar('trainer-dash')}"></div>
+
+    <div class="main-content flex-grow-1 bg-light min-vh-100 d-flex flex-column">
+        <nav th:replace="~{fragments/components :: navbar}"></nav>
+
+        <div class="p-4 flex-grow-1">
+            <!-- Breadcrumbs -->
+            <div class="mb-3">
+                <a th:href="@{'/trainer/members/' + ${member.id} + '/plans'}" class="text-decoration-none text-muted small">&larr; Back to Athlete Plans</a>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1">Prescribe Exercise &amp; Workout Plan</h3>
+                    <p class="text-muted small mb-0">Design a customized workout routine tailored to <strong th:text="${member.fullName}">Athlete</strong>'s body metrics and fitness goals.</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Left: Athlete Metrics Reference Card -->
+                <div class="col-lg-4">
+                    <div class="card shadow-sm border-0 sticky-top" style="top: 80px;">
+                        <div class="card-header bg-danger text-white py-3">
+                            <h6 class="fw-bold mb-0"><i class="bi bi-person-lines-fill me-1"></i> Athlete Physical Profile</h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                                <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 48px; height: 48px; font-size: 1.25rem;">
+                                    <span th:text="${#strings.substring(member.firstName,0,1)} + ${#strings.substring(member.lastName,0,1)}">JD</span>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold mb-0" th:text="${member.fullName}">Athlete Name</h5>
+                                    <small class="text-muted" th:text="${member.gender != null ? member.gender : 'Unspecified'}">Gender</small>
+                                </div>
+                            </div>
+
+                            <div th:if="${latestProgress != null}">
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light rounded border text-center">
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">WEIGHT</small>
+                                            <strong class="text-danger" th:text="${latestProgress.weightKg} + ' kg'">65 kg</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light rounded border text-center">
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">HEIGHT</small>
+                                            <strong class="text-dark" th:text="${latestProgress.heightCm} + ' cm'">170 cm</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light rounded border text-center">
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">BMI</small>
+                                            <strong class="text-primary" th:text="${latestProgress.bmi}">22.5</strong>
+                                            <small class="d-block text-muted" style="font-size:0.65rem;" th:text="${latestProgress.bmiCategory}">Normal</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light rounded border text-center">
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">SOMATOTYPE</small>
+                                            <strong class="text-dark" th:text="${latestProgress.bodyType != null ? latestProgress.bodyType : 'Not set'}">Mesomorph</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light rounded border text-center">
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">TRAINING HRS</small>
+                                            <strong class="text-dark" th:text="${latestProgress.workoutHoursPerWeek != null ? latestProgress.workoutHoursPerWeek + ' hrs/wk' : '--'}">4 hrs</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light rounded border text-center">
+                                            <small class="text-muted d-block" style="font-size:0.7rem;">BODY FAT</small>
+                                            <strong class="text-dark" th:text="${latestProgress.bodyFatPercentage != null ? latestProgress.bodyFatPercentage + '%' : '--'}">--</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 bg-light rounded border small mb-2">
+                                    <span class="text-muted d-block fw-semibold mb-1">Target Goal:</span>
+                                    <span class="text-dark" th:text="${latestProgress.targetGoal != null and !latestProgress.targetGoal.isEmpty() ? latestProgress.targetGoal : 'General Fitness & Conditioning'}">Goal</span>
+                                </div>
+
+                                <div class="p-3 bg-light rounded border small" th:if="${latestProgress.notes != null and !latestProgress.notes.isEmpty()}">
+                                    <span class="text-muted d-block fw-semibold mb-1">Latest Athlete Notes:</span>
+                                    <em class="text-muted" th:text="${latestProgress.notes}">Notes</em>
+                                </div>
+                            </div>
+
+                            <div th:if="${latestProgress == null}" class="text-center text-muted py-4">
+                                <i class="bi bi-speedometer2 fs-2 d-block mb-2"></i>
+                                No previous metric assessments recorded yet. You can still prescribe a baseline routine.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Workout Plan Form -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-pencil-square text-danger me-1"></i> Routine Specifications</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <form th:action="@{'/trainer/members/' + ${member.id} + '/workout-plan/save'}" th:object="${workoutPlan}" method="post">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Routine / Plan Title <span class="text-danger">*</span></label>
+                                        <input type="text" th:field="*{title}" class="form-control" placeholder="e.g. 8-Week Hypertrophy &amp; Core Conditioning" required>
+                                        <div class="text-danger small" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Primary Fitness Goal</label>
+                                        <select th:field="*{fitnessGoal}" class="form-select">
+                                            <option value="Hypertrophy &amp; Lean Muscle">Hypertrophy &amp; Lean Muscle</option>
+                                            <option value="Fat Loss &amp; Metabolic Conditioning">Fat Loss &amp; Metabolic Conditioning</option>
+                                            <option value="Strength &amp; Powerlifting">Strength &amp; Powerlifting</option>
+                                            <option value="Athletic Speed &amp; Agility">Athletic Speed &amp; Agility</option>
+                                            <option value="General Health &amp; Mobility">General Health &amp; Mobility</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Target Body Somatotype</label>
+                                        <select th:field="*{targetBodyType}" class="form-select">
+                                            <option value="Mesomorph">Mesomorph (Natural athletic build / high recovery)</option>
+                                            <option value="Ectomorph">Ectomorph (Lean / needs higher volume &amp; rest)</option>
+                                            <option value="Endomorph">Endomorph (Higher metabolic resistance / high density)</option>
+                                            <option value="All Profiles">All Profiles / Mixed</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Frequency</label>
+                                        <input type="text" th:field="*{frequency}" class="form-control" placeholder="e.g. 4 Days / Week">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Duration (Weeks)</label>
+                                        <input type="number" th:field="*{durationWeeks}" class="form-control" min="1" max="52" value="8">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Start Date</label>
+                                        <input type="date" th:field="*{startDate}" class="form-control" required>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Day-by-Day Exercise Breakdown &amp; Routines <span class="text-danger">*</span></label>
+                                        <div class="text-muted small mb-2">Outline exercises, sets, repetitions, and rest periods for each training day.</div>
+                                        <textarea th:field="*{scheduleDetails}" rows="10" class="form-control font-monospace" style="font-size: 0.88rem;"
+                                                  placeholder="• Day 1 (Lower Body):
+  - Barbell Back Squat: 4 sets x 8 reps (2 min rest)
+  - Romanian Deadlifts: 3 sets x 10 reps
+  - Walking Lunges: 3 sets x 12 reps per leg
+  - Standing Calf Raises: 3 sets x 15 reps
+
+• Day 2 (Upper Body Push/Pull):
+  - Dumbbell Incline Bench Press: 4 sets x 10 reps
+  - Wide Grip Lat Pulldown: 4 sets x 10 reps
+  - Seated Cable Rows: 3 sets x 12 reps
+  - Dumbbell Shoulder Press: 3 sets x 10 reps
+  - Hanging Knee Raises: 3 sets x 15 reps
+
+• Day 3: Active Recovery &amp; 30 min brisk walk
+• Day 4: Lower Body Posterior Focus..."></textarea>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Coach's Advice &amp; Recovery Guidelines</label>
+                                        <textarea th:field="*{trainerAdvice}" rows="4" class="form-control"
+                                                  placeholder="Warmup routine instructions, progressive overload guidance, rest interval tips, mobility stretches..."></textarea>
+                                    </div>
+
+                                    <div class="col-12 d-flex justify-content-between align-items-center pt-3 border-top">
+                                        <a th:href="@{'/trainer/members/' + ${member.id} + '/plans'}" class="btn btn-outline-secondary">
+                                            Cancel
+                                        </a>
+                                        <button type="submit" class="btn btn-danger px-4">
+                                            <i class="bi bi-check2-circle me-1"></i> Save &amp; Assign Exercise Plan
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer th:replace="~{fragments/components :: footer}"></footer>
+    </div>
+</div>
+
+</body>
+</html>

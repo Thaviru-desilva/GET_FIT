@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/components :: head(${gymClass.id != null ? 'Edit Class' : 'Schedule Class'})}"></head>
+<body>
+
+<div class="d-flex" id="wrapper">
+    <div th:replace="~{fragments/components :: sidebar('classes')}"></div>
+
+    <div class="main-content flex-grow-1 bg-light min-vh-100 d-flex flex-column">
+        <nav th:replace="~{fragments/components :: navbar}"></nav>
+
+        <div class="p-4 flex-grow-1">
+            <div class="mb-4">
+                <a th:href="@{/classes}" class="text-decoration-none text-muted small">&larr; Back to Class Timetable</a>
+                <h3 class="fw-bold mt-1" th:text="${gymClass.id != null ? 'Edit Fitness Class' : 'Schedule New Fitness Class'}">Class</h3>
+            </div>
+
+            <div class="card shadow-sm col-lg-8 mx-auto">
+                <div class="card-header bg-white py-3">
+                    <span class="fw-semibold text-primary"><i class="bi bi-calendar-plus me-1"></i> Class Details</span>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="@{/classes/save}" th:object="${gymClass}" method="post">
+                        <input type="hidden" th:field="*{id}">
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Class Name *</label>
+                            <input type="text" th:field="*{name}" class="form-control" th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''" placeholder="e.g. CrossFit WOD, Power Yoga, HIIT Circuit" required>
+                            <div class="invalid-feedback" th:errors="*{name}"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Description</label>
+                            <textarea th:field="*{description}" class="form-control" rows="3" placeholder="Brief outline of intensity, target muscle groups, and routine..."></textarea>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Assign Coach / Instructor *</label>
+                                <select th:field="*{trainer}" class="form-select" th:classappend="${#fields.hasErrors('trainer')} ? 'is-invalid' : ''" required>
+                                    <option value="" disabled selected>-- Select Trainer --</option>
+                                    <option th:each="t : ${trainers}"
+                                            th:value="${t.id}"
+                                            th:text="${t.fullName} + ' (' + ${t.specialization} + ')'"></option>
+                                </select>
+                                <div class="invalid-feedback" th:errors="*{trainer}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Location / Room</label>
+                                <input type="text" th:field="*{room}" class="form-control" placeholder="e.g. Studio A, CrossFit Box, Main Floor">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Recurring Days / Schedule</label>
+                            <input type="text" th:field="*{dayOfWeek}" class="form-control" placeholder="e.g. Monday, Wednesday, Friday or Saturday Morning">
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Start Time *</label>
+                                <input type="time" th:field="*{startTime}" class="form-control" th:classappend="${#fields.hasErrors('startTime')} ? 'is-invalid' : ''" required>
+                                <div class="invalid-feedback" th:errors="*{startTime}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">End Time *</label>
+                                <input type="time" th:field="*{endTime}" class="form-control" th:classappend="${#fields.hasErrors('endTime')} ? 'is-invalid' : ''" required>
+                                <div class="invalid-feedback" th:errors="*{endTime}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Max Participant Capacity *</label>
+                                <input type="number" th:field="*{capacity}" class="form-control" th:classappend="${#fields.hasErrors('capacity')} ? 'is-invalid' : ''" min="1" placeholder="15" required>
+                                <div class="invalid-feedback" th:errors="*{capacity}"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                            <a th:href="@{/classes}" class="btn btn-light px-4">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check-lg"></i> Save Class
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <footer th:replace="~{fragments/components :: footer}"></footer>
+    </div>
+</div>
+
+</body>
+</html>

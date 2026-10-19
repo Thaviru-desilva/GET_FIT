@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/components :: head('Coach Portal - Dashboard')}"></head>
+<body>
+
+<div class="d-flex" id="wrapper">
+    <div th:replace="~{fragments/components :: sidebar('trainer-dash')}"></div>
+
+    <div class="main-content flex-grow-1 bg-light min-vh-100 d-flex flex-column">
+        <nav th:replace="~{fragments/components :: navbar}"></nav>
+
+        <div class="p-4 flex-grow-1">
+            <!-- Welcome Header -->
+            <div class="card shadow-sm mb-4 border-0 text-white" style="background: linear-gradient(135deg, #0d0d0f 0%, #1a1a24 100%); border-left: 4px solid #D4145A !important;">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white shadow"
+                             style="width: 60px; height: 60px; font-size: 1.6rem; background: #D4145A;">
+                            <i class="bi bi-person-badge-fill"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <h3 class="fw-bold m-0 text-white" th:text="'Coach ' + ${trainer.fullName}">Coach Name</h3>
+                                <span class="badge bg-danger px-3 py-1" th:text="${trainer.specialization}">Specialization</span>
+                            </div>
+                            <span class="text-light text-opacity-75 small" th:text="${trainer.experienceYears} + ' Years Certified Experience &bull; ' + ${trainer.email}">5 Years Experience</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a th:href="@{/trainer/plans}" class="btn btn-danger btn-sm px-3 shadow-sm d-flex align-items-center gap-1">
+                            <i class="bi bi-journal-medical"></i> Workout &amp; Diet Plans
+                        </a>
+                        <a th:href="@{/trainer/resources}" class="btn btn-outline-light btn-sm px-3 d-flex align-items-center gap-1">
+                            <i class="bi bi-box-seam"></i> Equipment &amp; Resources
+                        </a>
+                        <a th:href="@{/classes/new}" class="btn btn-outline-light btn-sm px-3 d-flex align-items-center gap-1">
+                            <i class="bi bi-calendar-plus"></i> Schedule Class
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coach Quick Stats -->
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card shadow-sm border-0 border-start border-4 border-success p-3 bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size:0.75rem;">Assigned Athletes</small>
+                                <h3 class="fw-bold my-1 text-success" th:text="${#lists.size(members)}">0</h3>
+                                <span class="text-muted small">1-on-1 coaching roster</span>
+                            </div>
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                <i class="bi bi-people-fill fs-5"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card shadow-sm border-0 border-start border-4 border-danger p-3 bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size:0.75rem;">Exercise Plans</small>
+                                <h3 class="fw-bold my-1 text-danger" th:text="${workoutPlansCount}">0</h3>
+                                <span class="text-muted small">Active routines</span>
+                            </div>
+                            <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                <i class="bi bi-lightning-charge-fill fs-5"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card shadow-sm border-0 border-start border-4 border-warning p-3 bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size:0.75rem;">Diet Protocols</small>
+                                <h3 class="fw-bold my-1 text-warning-emphasis" th:text="${dietPlansCount}">0</h3>
+                                <span class="text-muted small">Tailored nutrition</span>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                <i class="bi bi-apple fs-5"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card shadow-sm border-0 border-start border-4 border-primary p-3 bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size:0.75rem;">Classes Taught</small>
+                                <h3 class="fw-bold my-1 text-primary" th:text="${#lists.size(classes)}">0</h3>
+                                <span class="text-muted small">Group fitness sessions</span>
+                            </div>
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                <i class="bi bi-calendar-check-fill fs-5"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floor Capacity & Equipment Availability Widget -->
+            <div class="card shadow-sm border-0 mb-4 bg-white p-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">
+                            <i class="bi bi-speedometer text-danger me-1"></i> Live Facility &amp; Equipment Capacity
+                        </h5>
+                        <small class="text-muted">Monitor available training stations and gym floor density</small>
+                    </div>
+                    <a th:href="@{/trainer/resources}" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-box-seam me-1"></i> Full Equipment &amp; Stations Console &rarr;
+                    </a>
+                </div>
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-5">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-semibold small text-uppercase">Live Floor Density:</span>
+                                <strong class="text-dark" th:text="${floorOccupancy} + ' / ' + ${maxFloorCapacity} + ' athletes'">12 / 50</strong>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar" role="progressbar"
+                                     th:classappend="${floorOccupancyPercentage < 70 ? 'bg-success' : (floorOccupancyPercentage < 90 ? 'bg-warning' : 'bg-danger')}"
+                                     th:style="'width: ' + ${floorOccupancyPercentage} + '%;'"></div>
+                            </div>
+                            <div class="text-muted small mt-1" style="font-size:0.75rem;">
+                                Facility operating well within safety and comfort thresholds.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <div th:each="r, iter : ${resources}" th:if="${iter.index < 4}"
+                                 class="p-2 px-3 bg-light rounded border d-flex align-items-center gap-2">
+                                <i class="bi" th:classappend="${r.categoryIcon}"></i>
+                                <div>
+                                    <div class="fw-bold text-dark small" th:text="${r.name}">Rack</div>
+                                    <small th:classappend="${r.availableQuantity > 0 ? 'text-success' : 'text-danger'}"
+                                           th:text="${r.availableQuantity} + ' / ' + ${r.totalQuantity} + ' Free'">2 Free</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assigned Personal Training Athletes Roster -->
+            <div class="card shadow-sm border-0 mb-4 bg-white">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-people-fill text-danger me-1"></i> My Assigned 1-on-1 Athletes</h5>
+                        <small class="text-muted">Manage workouts, nutrition protocols, and body assessments</small>
+                    </div>
+                    <div>
+                        <input type="text" id="athleteSearchInput" class="form-control form-control-sm" placeholder="Search athletes..." onkeyup="filterAthletes()">
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" id="athleteTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Athlete</th>
+                                    <th>Contact</th>
+                                    <th>Status</th>
+                                    <th>Member Since</th>
+                                    <th class="text-end">Prescribe &amp; Assess</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(members)}">
+                                    <td colspan="5" class="text-center text-muted py-5">
+                                        <i class="bi bi-person-slash fs-1 d-block mb-2 text-warning"></i>
+                                        No athletes currently assigned for 1-on-1 coaching.
+                                    </td>
+                                </tr>
+                                <tr th:each="m : ${members}">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-circle bg-danger bg-opacity-10 text-danger fw-bold d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <span th:text="${#strings.substring(m.firstName,0,1)} + ${#strings.substring(m.lastName,0,1)}">JD</span>
+                                            </div>
+                                            <div>
+                                                <a th:href="@{'/trainer/members/' + ${m.id} + '/plans'}" class="fw-bold text-dark text-decoration-none athlete-name" th:text="${m.fullName}">Athlete Name</a>
+                                                <small class="text-muted d-block athlete-email" th:text="${m.email}">email</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="small" th:text="${m.phone}">+1-555</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" th:text="${m.status}">ACTIVE</span>
+                                    </td>
+                                    <td class="text-muted small" th:text="${m.joinDate}">2026-01-01</td>
+                                    <td class="text-end">
+                                        <a th:href="@{'/trainer/members/' + ${m.id} + '/plans'}" class="btn btn-sm btn-danger shadow-sm me-1">
+                                            <i class="bi bi-clipboard2-pulse"></i> Plans &amp; Progress
+                                        </a>
+                                        <a th:href="@{'/members/view/' + ${m.id}}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-eye"></i> Profile
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scheduled Classes Row -->
+            <div class="card shadow-sm border-0 mb-4 bg-white">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <span class="fw-bold text-dark"><i class="bi bi-calendar-check text-primary me-1"></i> My Scheduled Classes</span>
+                    <a th:href="@{/classes}" class="btn btn-sm btn-link text-decoration-none">View All Gym Classes &rarr;</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Class Name</th>
+                                    <th>Days &amp; Time</th>
+                                    <th>Studio / Room</th>
+                                    <th>Roster &amp; Occupancy</th>
+                                    <th class="text-end">Roster</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(classes)}">
+                                    <td colspan="5" class="text-center text-muted py-4">You have no scheduled classes assigned yet.</td>
+                                </tr>
+                                <tr th:each="c : ${classes}">
+                                    <td>
+                                        <div class="fw-semibold text-dark" th:text="${c.name}">Class Name</div>
+                                        <div class="text-muted small" th:text="${c.description}">Description</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold small" th:text="${c.dayOfWeek}">Days</div>
+                                        <div class="text-muted small" th:text="${c.startTime} + ' - ' + ${c.endTime}">07:00 - 08:00</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border" th:text="${c.room}">Room</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold" th:text="${c.confirmedBookingsCount} + ' / ' + ${c.capacity}"></span> athletes
+                                        (<span class="text-success small" th:text="${c.availableSpots} + ' available'"></span>)
+                                    </td>
+                                    <td class="text-end">
+                                        <a th:href="@{'/classes/view/' + ${c.id}}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-people-fill"></i> View Roster
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer th:replace="~{fragments/components :: footer}"></footer>
+    </div>
+</div>
+
+<script>
+    function filterAthletes() {
+        const input = document.getElementById('athleteSearchInput');
+        const filter = input.value.toLowerCase();
+        const rows = document.querySelectorAll('#athleteTable tbody tr');
+        rows.forEach(row => {
+            const nameEl = row.querySelector('.athlete-name');
+            const emailEl = row.querySelector('.athlete-email');
+            if (nameEl && emailEl) {
+                const text = (nameEl.innerText + ' ' + emailEl.innerText).toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
