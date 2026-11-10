@@ -113,6 +113,11 @@
             </a>
         </li>
         <li class="nav-item">
+            <a th:href="@{/member/workout-slots}" class="nav-link text-white d-flex align-items-center gap-2" th:classappend="${activeTab == 'workout-slots'} ? 'active' : ''">
+                <i class="bi bi-stopwatch-fill text-danger"></i> Book Workout Slot
+            </a>
+        </li>
+        <li class="nav-item">
             <a th:href="@{/classes}" class="nav-link text-white d-flex align-items-center gap-2" th:classappend="${activeTab == 'classes'} ? 'active' : ''">
                 <i class="bi bi-calendar-check-fill"></i> Browse &amp; Book Classes
             </a>

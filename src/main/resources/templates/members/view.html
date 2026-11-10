@@ -237,7 +237,7 @@
                                     <td th:text="${sub.plan.durationDays} + ' days'">30 days</td>
                                     <td th:text="${sub.startDate}">2026-01-01</td>
                                     <td th:text="${sub.endDate}">2026-02-01</td>
-                                    <td class="fw-semibold" th:text="'$' + ${#numbers.formatDecimal(sub.amountPaid, 1, 2)}">$0.00</td>
+                                    <td class="fw-semibold" th:text="'Rs. ' + ${#numbers.formatDecimal(sub.amountPaid, 1, 2)}">Rs. 0.00</td>
                                     <td>
                                         <span class="badge bg-success" th:text="${sub.paymentStatus}">PAID</span>
                                     </td>

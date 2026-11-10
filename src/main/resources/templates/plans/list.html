@@ -42,7 +42,7 @@
                             <p class="text-muted small mb-3 flex-grow-1" th:text="${p.description}">Description</p>
 
                             <div class="my-3">
-                                <span class="fs-1 fw-extrabold text-primary" th:text="'$' + ${#numbers.formatDecimal(p.price, 1, 2)}">$0.00</span>
+                                <span class="fs-1 fw-extrabold text-primary" th:text="'Rs. ' + ${#numbers.formatDecimal(p.price, 1, 2)}">Rs. 0.00</span>
                                 <span class="text-muted small" th:text="' / ' + ${p.durationDays} + ' days'"> / 30 days</span>
                             </div>
 

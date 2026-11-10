@@ -36,7 +36,7 @@
             <!-- For Guests -->
             <div sec:authorize="isAnonymous()" class="d-flex align-items-center" style="display:flex;gap:12px;align-items:center;">
                 <a th:href="@{/login}" class="btn-login">Login</a>
-                <a href="#memberships" class="btn btn-red">Join Now <span aria-hidden="true">&rarr;</span></a>
+                <a th:href="@{/register}" class="btn btn-red">Join Now <span aria-hidden="true">&rarr;</span></a>
             </div>
 
             <!-- For Logged-in Users -->
@@ -146,7 +146,7 @@
                         <small th:text="'Approx. Rs. ' + ${#numbers.formatDecimal(p.price / (p.durationDays / 30.0), 1, 'COMMA', 0, 'POINT')} + ' / mo'"></small>
                     </div>
                     <p th:text="${p.description}">Description</p>
-                    <a th:href="@{/login}" class="btn btn-outline">Join now</a>
+                    <a th:href="@{/register}" class="btn btn-outline">Join now</a>
                 </article>
             </div>
         </div>

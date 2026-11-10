@@ -15,11 +15,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsername(String username);
 
+    Optional<User> findByUsernameIgnoreCase(String username);
+
     boolean existsByUsername(String username);
+
+    boolean existsByUsernameIgnoreCase(String username);
 
     List<User> findByRole(UserRole role);
 
     Optional<User> findByTrainer(Trainer trainer);
 
+    Optional<User> findByTrainerId(Long trainerId);
+
     Optional<User> findByMember(Member member);
+
+    Optional<User> findByMemberId(Long memberId);
 }

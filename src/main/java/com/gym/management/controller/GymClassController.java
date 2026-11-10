@@ -117,11 +117,17 @@ public class GymClassController {
     @PostMapping("/book/{id}")
     public String bookClass(@PathVariable("id") Long id,
                             @RequestParam(value = "memberId", required = false) Long specificMemberId,
+                            @RequestParam(value = "redirectUrl", defaultValue = "/classes") String redirectUrl,
                             Authentication auth,
                             RedirectAttributes redirectAttributes) {
         try {
-            Long memberId = specificMemberId;
-            if (memberId == null && auth != null) {
+            Long memberId = null;
+            boolean isAdminOrStaff = auth != null && auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_TRAINER"));
+
+            if (isAdminOrStaff && specificMemberId != null) {
+                memberId = specificMemberId;
+            } else if (auth != null) {
                 Member currentMember = userService.findMemberByUsername(auth.getName()).orElse(null);
                 if (currentMember != null) {
                     memberId = currentMember.getId();
@@ -130,7 +136,7 @@ public class GymClassController {
 
             if (memberId == null) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Unable to determine member to enroll.");
-                return "redirect:/classes";
+                return "redirect:" + redirectUrl;
             }
 
             gymClassService.bookClass(id, memberId, LocalDate.now());
@@ -138,15 +144,32 @@ public class GymClassController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/classes";
+        return "redirect:" + redirectUrl;
     }
 
     @PostMapping("/cancel-booking/{id}")
     public String cancelBooking(@PathVariable("id") Long id,
                                 @RequestParam(value = "redirectUrl", defaultValue = "/classes") String redirectUrl,
+                                Authentication auth,
                                 RedirectAttributes redirectAttributes) {
-        gymClassService.cancelBooking(id);
-        redirectAttributes.addFlashAttribute("successMessage", "Class booking cancelled.");
+        try {
+            Long requestingMemberId = null;
+            boolean isAdminOrStaff = false;
+            if (auth != null) {
+                isAdminOrStaff = auth.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_TRAINER"));
+                if (!isAdminOrStaff) {
+                    Member currentMember = userService.findMemberByUsername(auth.getName()).orElse(null);
+                    if (currentMember != null) {
+                        requestingMemberId = currentMember.getId();
+                    }
+                }
+            }
+            gymClassService.cancelBooking(id, requestingMemberId, isAdminOrStaff);
+            redirectAttributes.addFlashAttribute("successMessage", "Class booking cancelled.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
         return "redirect:" + redirectUrl;
     }
 }

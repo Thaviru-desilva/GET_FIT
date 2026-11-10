@@ -41,8 +41,8 @@
                                 <div class="invalid-feedback" th:errors="*{durationDays}"></div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Price ($ USD) *</label>
-                                <input type="number" step="0.01" th:field="*{price}" class="form-control" th:classappend="${#fields.hasErrors('price')} ? 'is-invalid' : ''" min="0" placeholder="e.g. 49.99" required>
+                                <label class="form-label small fw-semibold">Price (Rs. / LKR) *</label>
+                                <input type="number" step="0.01" th:field="*{price}" class="form-control" th:classappend="${#fields.hasErrors('price')} ? 'is-invalid' : ''" min="0" placeholder="e.g. 5000.00" required>
                                 <div class="invalid-feedback" th:errors="*{price}"></div>
                             </div>
                         </div>

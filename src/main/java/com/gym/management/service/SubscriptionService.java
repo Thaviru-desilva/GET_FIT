@@ -32,7 +32,19 @@ public class SubscriptionService {
         this.planRepository = planRepository;
     }
 
+    public void updateExpiredSubscriptions() {
+        List<Subscription> activeSubscriptions = subscriptionRepository.findByStatus(SubscriptionStatus.ACTIVE);
+        LocalDate today = LocalDate.now();
+        for (Subscription s : activeSubscriptions) {
+            if (s.getEndDate() != null && s.getEndDate().isBefore(today)) {
+                s.setStatus(SubscriptionStatus.EXPIRED);
+                subscriptionRepository.save(s);
+            }
+        }
+    }
+
     public List<Subscription> findAll() {
+        updateExpiredSubscriptions();
         return subscriptionRepository.findAll();
     }
 
@@ -41,6 +53,7 @@ public class SubscriptionService {
     }
 
     public List<Subscription> findByMemberId(Long memberId) {
+        updateExpiredSubscriptions();
         return subscriptionRepository.findByMemberIdOrderByStartDateDesc(memberId);
     }
 
@@ -79,6 +92,7 @@ public class SubscriptionService {
     }
 
     public long countActiveSubscriptions() {
+        updateExpiredSubscriptions();
         return subscriptionRepository.countByStatus(SubscriptionStatus.ACTIVE);
     }
 
@@ -87,6 +101,7 @@ public class SubscriptionService {
     }
 
     public List<Subscription> getExpiringSoon() {
+        updateExpiredSubscriptions();
         LocalDate today = LocalDate.now();
         return subscriptionRepository.findExpiringSoon(today, today.plusDays(7));
     }

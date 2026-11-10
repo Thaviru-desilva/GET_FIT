@@ -80,11 +80,11 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
                                 <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.75rem;">Total Revenue</small>
-                                <h2 class="fw-bold mt-1 mb-0" th:text="'$' + ${#numbers.formatDecimal(stats.totalRevenue, 1, 2)}">$0.00</h2>
+                                <h2 class="fw-bold mt-1 mb-0" th:text="'Rs. ' + ${#numbers.formatDecimal(stats.totalRevenue, 1, 2)}">Rs. 0.00</h2>
                                 <small class="text-muted" th:text="${stats.totalTrainers} + ' certified trainers'"></small>
                             </div>
                             <div class="stat-icon bg-warning bg-opacity-10 text-warning">
-                                <i class="bi bi-currency-dollar"></i>
+                                <i class="bi bi-cash-stack"></i>
                             </div>
                         </div>
                     </div>

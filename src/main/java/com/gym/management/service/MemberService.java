@@ -34,7 +34,22 @@ public class MemberService {
         return memberRepository.searchMembers(query.trim());
     }
 
+    public boolean existsByEmail(String email) {
+        if (email == null || email.trim().isEmpty()) return false;
+        return memberRepository.existsByEmailIgnoreCase(email.trim());
+    }
+
+    public boolean isEmailTakenByOtherMember(String email, Long memberId) {
+        if (email == null || email.trim().isEmpty()) return false;
+        return memberRepository.findByEmailIgnoreCase(email.trim())
+                .map(m -> !m.getId().equals(memberId))
+                .orElse(false);
+    }
+
     public Member save(Member member) {
+        if (member.getEmail() != null) {
+            member.setEmail(member.getEmail().trim().toLowerCase());
+        }
         return memberRepository.save(member);
     }
 

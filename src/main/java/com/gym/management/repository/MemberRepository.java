@@ -25,4 +25,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
            "LOWER(m.email) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
            "m.phone LIKE CONCAT('%', :q, '%')")
     List<Member> searchMembers(@Param("q") String query);
+
+    java.util.Optional<Member> findByEmailIgnoreCase(String email);
+
+    boolean existsByEmailIgnoreCase(String email);
 }

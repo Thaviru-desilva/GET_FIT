@@ -19,19 +19,22 @@ public class MemberController {
     private final AttendanceService attendanceService;
     private final MemberProgressService progressService;
     private final FitnessPlanService fitnessPlanService;
+    private final UserService userService;
 
     public MemberController(MemberService memberService,
                             TrainerService trainerService,
                             SubscriptionService subscriptionService,
                             AttendanceService attendanceService,
                             MemberProgressService progressService,
-                            FitnessPlanService fitnessPlanService) {
+                            FitnessPlanService fitnessPlanService,
+                            UserService userService) {
         this.memberService = memberService;
         this.trainerService = trainerService;
         this.subscriptionService = subscriptionService;
         this.attendanceService = attendanceService;
         this.progressService = progressService;
         this.fitnessPlanService = fitnessPlanService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -53,12 +56,32 @@ public class MemberController {
                              BindingResult bindingResult,
                              Model model,
                              RedirectAttributes redirectAttributes) {
+        boolean isNew = (member.getId() == null);
+        String cleanEmail = member.getEmail() != null ? member.getEmail().trim().toLowerCase() : "";
+
+        if (isNew) {
+            if (memberService.existsByEmail(cleanEmail) || userService.existsByUsername(cleanEmail)) {
+                bindingResult.rejectValue("email", "error.email", "This email address is already in use by another registered account.");
+            }
+        } else {
+            if (memberService.isEmailTakenByOtherMember(cleanEmail, member.getId())) {
+                bindingResult.rejectValue("email", "error.email", "This email address is already assigned to another member.");
+            }
+        }
+
         if (bindingResult.hasErrors()) {
             model.addAttribute("trainers", trainerService.findAll());
             return "members/form";
         }
-        memberService.save(member);
-        redirectAttributes.addFlashAttribute("successMessage", "Member saved successfully!");
+        Member saved = memberService.save(member);
+        if (isNew) {
+            userService.createUserForMember(saved, "password123");
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Member enrolled successfully! Login account created: " + saved.getEmail() + " (Password: password123)");
+        } else {
+            userService.syncMemberUserEmail(saved);
+            redirectAttributes.addFlashAttribute("successMessage", "Member record updated successfully!");
+        }
         return "redirect:/members";
     }
 
@@ -93,6 +116,7 @@ public class MemberController {
 
     @GetMapping("/delete/{id}")
     public String deleteMember(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        userService.deleteUserByMemberId(id);
         memberService.deleteById(id);
         redirectAttributes.addFlashAttribute("successMessage", "Member deleted successfully.");
         return "redirect:/members";

@@ -35,6 +35,19 @@ public class MemberProgressService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found with ID: " + memberId));
 
+        if (weightKg == null || weightKg < 20.0 || weightKg > 350.0) {
+            throw new IllegalArgumentException("Weight must be between 20 kg and 350 kg.");
+        }
+        if (heightCm == null || heightCm < 80.0 || heightCm > 250.0) {
+            throw new IllegalArgumentException("Height must be between 80 cm and 250 cm.");
+        }
+        if (workoutHours != null && (workoutHours < 0.0 || workoutHours > 100.0)) {
+            throw new IllegalArgumentException("Workout hours per week must be between 0 and 100 hours.");
+        }
+        if (bodyFatPercentage != null && (bodyFatPercentage < 3.0 || bodyFatPercentage > 60.0)) {
+            throw new IllegalArgumentException("Body fat percentage must be between 3% and 60%.");
+        }
+
         MemberProgress progress = new MemberProgress(
                 member,
                 LocalDate.now(),
@@ -55,11 +68,11 @@ public class MemberProgressService {
     }
 
     public List<MemberProgress> getProgressHistory(Long memberId) {
-        return progressRepository.findByMemberIdOrderByRecordDateDesc(memberId);
+        return progressRepository.findByMemberIdOrderByRecordDateDescIdDesc(memberId);
     }
 
     public Optional<MemberProgress> getLatestProgress(Long memberId) {
-        return progressRepository.findTopByMemberIdOrderByRecordDateDesc(memberId);
+        return progressRepository.findTopByMemberIdOrderByRecordDateDescIdDesc(memberId);
     }
 
     public void deleteById(Long id) {

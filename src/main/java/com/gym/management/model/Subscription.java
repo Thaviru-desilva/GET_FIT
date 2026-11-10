@@ -114,6 +114,9 @@ public class Subscription {
     }
 
     public SubscriptionStatus getStatus() {
+        if (status == SubscriptionStatus.ACTIVE && isExpired()) {
+            return SubscriptionStatus.EXPIRED;
+        }
         return status;
     }
 
@@ -131,5 +134,9 @@ public class Subscription {
 
     public boolean isExpired() {
         return endDate != null && endDate.isBefore(LocalDate.now());
+    }
+
+    public boolean isActive() {
+        return getStatus() == SubscriptionStatus.ACTIVE && !isExpired();
     }
 }

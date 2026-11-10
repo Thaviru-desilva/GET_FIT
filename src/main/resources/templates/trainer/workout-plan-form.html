@@ -17,8 +17,8 @@
 
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                 <div>
-                    <h3 class="fw-bold mb-1">Prescribe Exercise &amp; Workout Plan</h3>
-                    <p class="text-muted small mb-0">Design a customized workout routine tailored to <strong th:text="${member.fullName}">Athlete</strong>'s body metrics and fitness goals.</p>
+                    <h3 class="fw-bold mb-1" th:text="${isEdit} ? 'Edit Custom Exercise Routine' : 'Prescribe Exercise &amp; Workout Plan'">Prescribe Exercise &amp; Workout Plan</h3>
+                    <p class="text-muted small mb-0" th:text="${isEdit} ? ('Update exercises, sets, reps, or guidelines for ' + ${member.fullName} + '.') : ('Design a customized workout routine tailored to ' + ${member.fullName} + '\'s body metrics and fitness goals.')">Design a customized workout routine tailored to athlete.</p>
                 </div>
             </div>
 
@@ -98,6 +98,37 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Equipment Slot Capacity Checker (FR-6, FR-7) -->
+                    <div class="card shadow-sm border-0 mt-4">
+                        <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold mb-0 text-white"><i class="bi bi-shield-check text-warning me-1"></i> Equipment Capacity</h6>
+                            <span class="badge bg-danger">Anti-Overcrowding</span>
+                        </div>
+                        <div class="card-body p-3">
+                            <p class="small text-muted mb-3">Check machine and zone congestion before scheduling high-demand sessions (e.g., Leg Day squat racks).</p>
+
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold">Target Workout Focus</label>
+                                <select id="trainerCheckerFocus" class="form-select form-select-sm" onchange="loadTrainerSlotCapacities()">
+                                    <option value="LEGS" selected>🦵 Legs (Squat Racks, Leg Press - Max 6)</option>
+                                    <option value="PUSH">🏋️ Push (Chest, Shoulders - Max 8)</option>
+                                    <option value="PULL">💪 Pull (Deadlift, Lat Pulldown - Max 8)</option>
+                                    <option value="CARDIO_FUNCTIONAL">⚡ Cardio / Functional (Turf, Erg - Max 10)</option>
+                                    <option value="FULL_BODY">🔥 Full Body Conditioning (Max 10)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Date to Check</label>
+                                <input type="date" id="trainerCheckerDate" class="form-control form-control-sm" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" onchange="loadTrainerSlotCapacities()">
+                            </div>
+
+                            <div id="trainerSlotsContainer" class="d-flex flex-column gap-2" style="max-height: 280px; overflow-y: auto;">
+                                <div class="text-center text-muted small py-3">Loading available slots...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Right: Workout Plan Form -->
@@ -108,6 +139,8 @@
                         </div>
                         <div class="card-body p-4">
                             <form th:action="@{'/trainer/members/' + ${member.id} + '/workout-plan/save'}" th:object="${workoutPlan}" method="post">
+                                <input type="hidden" th:field="*{id}">
+                                <input type="hidden" th:field="*{status}">
                                 <div class="row g-3">
                                     <div class="col-12">
                                         <label class="form-label fw-semibold">Routine / Plan Title <span class="text-danger">*</span></label>
@@ -152,9 +185,25 @@
                                     </div>
 
                                     <div class="col-12">
-                                        <label class="form-label fw-semibold">Day-by-Day Exercise Breakdown &amp; Routines <span class="text-danger">*</span></label>
-                                        <div class="text-muted small mb-2">Outline exercises, sets, repetitions, and rest periods for each training day.</div>
-                                        <textarea th:field="*{scheduleDetails}" rows="10" class="form-control font-monospace" style="font-size: 0.88rem;"
+                                        <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+                                            <label class="form-label fw-semibold mb-0">Day-by-Day Exercise Breakdown &amp; Routines <span class="text-danger">*</span></label>
+                                            <div class="d-flex gap-1 flex-wrap">
+                                                <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 rounded-pill" style="font-size:0.75rem;" onclick="insertTemplate('LEGS')">
+                                                    + Leg Day
+                                                </button>
+                                                <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 rounded-pill" style="font-size:0.75rem;" onclick="insertTemplate('PUSH')">
+                                                    + Push Day
+                                                </button>
+                                                <button type="button" class="btn btn-outline-success btn-sm py-0 px-2 rounded-pill" style="font-size:0.75rem;" onclick="insertTemplate('PULL')">
+                                                    + Pull Day
+                                                </button>
+                                                <button type="button" class="btn btn-outline-warning text-dark btn-sm py-0 px-2 rounded-pill" style="font-size:0.75rem;" onclick="insertTemplate('CARDIO')">
+                                                    + Cardio / MetCon
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="text-muted small mb-2">Outline exercises, sets, repetitions, and rest periods for each training day. Use quick buttons above to insert formatted splits.</div>
+                                        <textarea id="scheduleDetailsArea" th:field="*{scheduleDetails}" rows="11" class="form-control font-monospace" style="font-size: 0.88rem;"
                                                   placeholder="• Day 1 (Lower Body):
   - Barbell Back Squat: 4 sets x 8 reps (2 min rest)
   - Romanian Deadlifts: 3 sets x 10 reps
@@ -183,7 +232,7 @@
                                             Cancel
                                         </a>
                                         <button type="submit" class="btn btn-danger px-4">
-                                            <i class="bi bi-check2-circle me-1"></i> Save &amp; Assign Exercise Plan
+                                            <i class="bi bi-check2-circle me-1"></i> <span th:text="${isEdit} ? 'Update Exercise Routine' : 'Save &amp; Assign Exercise Plan'">Save &amp; Assign Exercise Plan</span>
                                         </button>
                                     </div>
                                 </div>
@@ -198,6 +247,127 @@
         <footer th:replace="~{fragments/components :: footer}"></footer>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    loadTrainerSlotCapacities();
+});
+
+const ROUTINE_TEMPLATES = {
+    'LEGS': `• Day (Lower Body - Squats & Posterior Chain):
+  - Barbell Back Squat: 4 sets x 8 reps (2-3 min rest) [Squat Rack]
+  - Romanian Deadlifts: 3 sets x 10 reps [Lifting Platform]
+  - 45° Incline Leg Press: 3 sets x 12 reps
+  - Seated Hamstring Leg Curls: 3 sets x 12 reps
+  - Standing Calf Raises: 4 sets x 15 reps
+  - Note: Book a LEGS equipment slot before arrival to guarantee Squat Rack access.
+`,
+    'PUSH': `• Day (Upper Body Push - Chest & Shoulders):
+  - Flat Olympic Barbell Bench Press: 4 sets x 8 reps [Bench Press]
+  - Incline Dumbbell Press: 3 sets x 10 reps
+  - Seated Overhead Dumbbell Press: 3 sets x 10 reps
+  - Cable Chest Flyes (High-to-Low): 3 sets x 12 reps [Cable Cross]
+  - Overhead Tricep Rope Extensions: 3 sets x 12 reps
+  - Note: Book a PUSH equipment slot to avoid bench press waiting.
+`,
+    'PULL': `• Day (Upper Body Pull - Back & Biceps):
+  - Conventional Deadlift: 3 sets x 5 reps [Lifting Platform]
+  - Neutral-Grip Lat Pulldown: 4 sets x 10 reps
+  - Seated Cable Rows: 3 sets x 12 reps [Cable Cross]
+  - Face Pulls (Rear Delts): 4 sets x 15 reps
+  - Incline Dumbbell Bicep Curls: 3 sets x 12 reps
+  - Note: Book a PULL slot to secure deadlift platform.
+`,
+    'CARDIO': `• Day (Functional Conditioning & MetCon):
+  - Concept2 Rowing Ergometer: 500m intervals x 5 rounds (1 min rest)
+  - Kettlebell Goblet Squats: 4 sets x 15 reps
+  - Sled Push / Turf Sprints: 4 sets x 25m [Functional Turf]
+  - Hanging Knee Raises: 3 sets x 15 reps
+  - Low-Intensity Incline Treadmill Walk: 20 minutes
+`
+};
+
+function insertTemplate(type) {
+    const textarea = document.getElementById('scheduleDetailsArea');
+    if (!textarea) return;
+    const template = ROUTINE_TEMPLATES[type] || '';
+    if (textarea.value.trim().length > 0) {
+        textarea.value = textarea.value.trimEnd() + '\n\n' + template;
+    } else {
+        textarea.value = template;
+    }
+    textarea.focus();
+}
+
+function loadTrainerSlotCapacities() {
+    const focus = document.getElementById("trainerCheckerFocus").value;
+    const date = document.getElementById("trainerCheckerDate").value;
+    const container = document.getElementById("trainerSlotsContainer");
+
+    if (!date) {
+        container.innerHTML = '<div class="text-center text-muted small py-3">Please select a valid date.</div>';
+        return;
+    }
+
+    container.innerHTML = '<div class="text-center text-muted small py-3"><div class="spinner-border spinner-border-sm text-danger me-1"></div> Checking equipment capacity...</div>';
+
+    fetch('/api/workout-slots/availability?date=' + encodeURIComponent(date) + '&focus=' + encodeURIComponent(focus))
+        .then(response => response.json())
+        .then(slots => {
+            if (!slots || slots.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted small py-3">No slot data available.</div>';
+                return;
+            }
+
+            let html = '';
+            let bestSlot = null;
+            slots.forEach(s => {
+                let badgeClass = 'bg-success';
+                let statusText = `${s.remainingSpots} free`;
+                let borderClass = 'border-secondary-subtle';
+
+                if (s.full) {
+                    badgeClass = 'bg-danger';
+                    statusText = 'FULL (Overcrowded)';
+                    borderClass = 'border-danger bg-danger-subtle';
+                } else if (s.remainingSpots <= 2) {
+                    badgeClass = 'bg-warning text-dark';
+                    statusText = `Congested (${s.remainingSpots} left)`;
+                    borderClass = 'border-warning';
+                }
+
+                if (!s.past && !s.full && (!bestSlot || s.remainingSpots > bestSlot.remainingSpots)) {
+                    bestSlot = s;
+                }
+
+                html += `
+                    <div class="p-2 rounded border ${borderClass} d-flex justify-content-between align-items-center bg-white shadow-xs">
+                        <div>
+                            <strong class="small d-block text-dark"><i class="bi bi-clock me-1 text-muted"></i>${s.timeSlotLabel}</strong>
+                            <small class="text-muted" style="font-size:0.75rem;">Cap: ${s.bookedCount}/${s.capacityLimit} booked</small>
+                        </div>
+                        <div>
+                            <span class="badge ${badgeClass} small">${statusText}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (bestSlot) {
+                html = `
+                    <div class="p-2 mb-2 rounded bg-success bg-opacity-10 border border-success border-opacity-25 small text-success">
+                        <i class="bi bi-star-fill text-warning me-1"></i><strong>Coach Tip:</strong> ${bestSlot.timeSlotLabel} has <strong>${bestSlot.remainingSpots} open spots</strong>. Recommend this quiet window to avoid floor delays!
+                    </div>` + html;
+            }
+
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            console.error('Failed to load slots:', err);
+            container.innerHTML = '<div class="text-center text-danger small py-3"><i class="bi bi-exclamation-triangle me-1"></i> Error loading slot capacities.</div>';
+        });
+}
+</script>
 
 </body>
 </html>

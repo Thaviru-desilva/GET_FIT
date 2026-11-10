@@ -35,7 +35,7 @@ public class AttendanceController {
             attendanceService.checkIn(memberId, notes);
             redirectAttributes.addFlashAttribute("successMessage", "Member checked in successfully!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Check-in failed: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/attendance";
     }

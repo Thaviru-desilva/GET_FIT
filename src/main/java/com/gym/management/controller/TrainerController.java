@@ -2,6 +2,7 @@ package com.gym.management.controller;
 
 import com.gym.management.model.Trainer;
 import com.gym.management.service.TrainerService;
+import com.gym.management.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,9 +15,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class TrainerController {
 
     private final TrainerService trainerService;
+    private final UserService userService;
 
-    public TrainerController(TrainerService trainerService) {
+    public TrainerController(TrainerService trainerService, UserService userService) {
         this.trainerService = trainerService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -35,11 +38,31 @@ public class TrainerController {
     public String saveTrainer(@Valid @ModelAttribute("trainer") Trainer trainer,
                               BindingResult bindingResult,
                               RedirectAttributes redirectAttributes) {
+        boolean isNew = (trainer.getId() == null);
+        String cleanEmail = trainer.getEmail() != null ? trainer.getEmail().trim().toLowerCase() : "";
+
+        if (isNew) {
+            if (trainerService.existsByEmail(cleanEmail) || userService.existsByUsername(cleanEmail)) {
+                bindingResult.rejectValue("email", "error.email", "This email address is already in use by another registered account.");
+            }
+        } else {
+            if (trainerService.isEmailTakenByOtherTrainer(cleanEmail, trainer.getId())) {
+                bindingResult.rejectValue("email", "error.email", "This email address is already assigned to another coach.");
+            }
+        }
+
         if (bindingResult.hasErrors()) {
             return "trainers/form";
         }
-        trainerService.save(trainer);
-        redirectAttributes.addFlashAttribute("successMessage", "Trainer saved successfully!");
+        Trainer saved = trainerService.save(trainer);
+        if (isNew) {
+            userService.createUserForTrainer(saved, "password123");
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Trainer added successfully! Portal account created: " + saved.getEmail() + " (Password: password123)");
+        } else {
+            userService.syncTrainerUserEmail(saved);
+            redirectAttributes.addFlashAttribute("successMessage", "Trainer details updated successfully!");
+        }
         return "redirect:/trainers";
     }
 
@@ -56,6 +79,7 @@ public class TrainerController {
 
     @GetMapping("/delete/{id}")
     public String deleteTrainer(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        userService.deleteUserByTrainerId(id);
         trainerService.deleteById(id);
         redirectAttributes.addFlashAttribute("successMessage", "Trainer deleted successfully.");
         return "redirect:/trainers";

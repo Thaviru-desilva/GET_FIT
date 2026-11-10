@@ -12,93 +12,174 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/custom.css}">
+    <style>
+        :root {
+            --black: #000;
+            --panel: #0d0d12;
+            --panel-card: #13131a;
+            --panel-border: rgba(255,255,255,0.1);
+            --red: #D4145A;
+            --red-hover: #b30f4a;
+            --muted: #9a9a9f;
+            --white: #ffffff;
+        }
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #060608 radial-gradient(ellipse at 50% 10%, rgba(212,20,90,0.12), transparent 70%);
+            color: var(--white);
+            min-height: 100vh;
+        }
+        .login-card {
+            background: var(--panel-card);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05);
+        }
+        .form-control, .form-select {
+            background-color: #09090d !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            color: #ffffff !important;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
+        }
+        .form-control:focus {
+            border-color: var(--red) !important;
+            box-shadow: 0 0 0 3px rgba(212,20,90,0.25) !important;
+            outline: none;
+        }
+        .form-control::placeholder {
+            color: #555562;
+        }
+        .input-group-text {
+            background-color: #09090d !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            color: var(--muted) !important;
+            border-radius: 10px;
+        }
+        .btn-red {
+            background-color: var(--red);
+            border-color: var(--red);
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            border-radius: 10px;
+            padding: 12px 20px;
+            transition: all 0.2s ease;
+        }
+        .btn-red:hover {
+            background-color: var(--red-hover);
+            border-color: var(--red-hover);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: #111;
+            padding: 6px 14px;
+            border-radius: 8px;
+        }
+    </style>
 </head>
-<body class="bg-black text-white d-flex align-items-center justify-content-center min-vh-100 py-5" style="background:#070709 !important;">
+<body class="d-flex align-items-center justify-content-center min-vh-100 py-5">
 
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5 col-xl-4">
+        <div class="col-11 col-sm-10 col-md-8 col-lg-6 col-xl-5">
 
             <!-- Brand header -->
             <div class="text-center mb-4">
                 <a th:href="@{/}" class="text-decoration-none text-white d-inline-block">
-                    <div class="d-inline-flex align-items-center gap-2 mb-2 p-2 px-3 border border-secondary rounded bg-dark" style="background:#111 !important;">
+                    <div class="brand-badge mb-2">
                         <svg viewBox="0 0 32 32" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" style="width:28px;height:28px;" aria-hidden="true">
                             <path d="M4 12v8M8 9v14M28 12v8M24 9v14M8 16h16"/>
                         </svg>
                         <span class="text-start" style="line-height:1.1;">
                             <b style="font-size:13px;letter-spacing:1px;display:block;">GET U FIT</b>
-                            <i style="font-style:normal;font-size:16px;font-weight:800;color:#D4145A;letter-spacing:3px;">GYM</i>
+                            <i style="font-style:normal;font-size:15px;font-weight:800;color:#D4145A;letter-spacing:3px;">GYM</i>
                         </span>
                     </div>
                 </a>
-                <p class="text-secondary text-uppercase tracking-wider small m-0" style="font-size:0.75rem;">Colombo's Premier Fitness Destination</p>
+                <p class="text-secondary text-uppercase tracking-wider small m-0" style="font-size:0.75rem; letter-spacing: 1.5px;">Colombo's Premier Fitness Destination</p>
             </div>
 
             <!-- Login Card -->
-            <div class="card bg-white text-dark shadow-lg border-0 rounded-4">
-                <div class="card-body p-4 p-sm-5">
-                    <h5 class="fw-bold text-center mb-4">Sign in to your Portal</h5>
+            <div class="card login-card p-4 p-sm-5 text-white">
 
-                    <!-- Alerts -->
-                    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show small" role="alert">
-                        <i class="bi bi-exclamation-circle-fill me-1"></i> <span th:text="${errorMessage}"></span>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    <div th:if="${logoutMessage}" class="alert alert-success alert-dismissible fade show small" role="alert">
-                        <i class="bi bi-check-circle-fill me-1"></i> <span th:text="${logoutMessage}"></span>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-
-                    <!-- Login Form -->
-                    <form th:action="@{/login}" method="post">
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Email / Username</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
-                                <input type="text" name="username" id="usernameInput" class="form-control" placeholder="user@getufit.lk" required autofocus>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label small fw-semibold">Password</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light"><i class="bi bi-shield-lock"></i></span>
-                                <input type="password" name="password" id="passwordInput" class="form-control" placeholder="••••••••" required>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
-                            <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Portal
-                        </button>
-                    </form>
-
-                    <!-- Quick Demo Logins -->
-                    <div class="mt-4 pt-4 border-top">
-                        <small class="text-muted d-block text-center fw-semibold mb-2" style="font-size:0.72rem;">ONE-CLICK DEMO PERSONAS</small>
-                        <div class="d-grid gap-2">
-                            <button type="button" class="btn btn-sm btn-outline-dark text-start" onclick="fillDemo('admin@apexfit.com', 'password123')">
-                                <span class="badge bg-danger me-1">Admin</span> admin@apexfit.com
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger text-start" onclick="fillDemo('elena.rostova@apexfit.com', 'password123')">
-                                <span class="badge text-white me-1" style="background:#D4145A;">Trainer</span> elena.rostova@apexfit.com (Coach)
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary text-start" onclick="fillDemo('sophia.miller@example.com', 'password123')">
-                                <span class="badge bg-dark me-1">Member</span> sophia.miller@example.com (Athlete)
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="text-center mt-3">
-                        <a th:href="@{/}" class="text-decoration-none text-muted small">&larr; Return to Public Website</a>
-                    </div>
-
+                <div class="text-center mb-4">
+                    <h4 class="fw-bold m-0">Sign In to Your Portal</h4>
+                    <p class="text-secondary small mt-1">Access workout routines, schedules, progress logs &amp; bookings</p>
                 </div>
+
+                <!-- Alerts -->
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show border-0 bg-danger bg-opacity-25 text-white small mb-4" role="alert" style="border-left: 4px solid #D4145A !important;">
+                    <i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i> <span th:text="${errorMessage}"></span>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div th:if="${logoutMessage}" class="alert alert-success alert-dismissible fade show border-0 bg-success bg-opacity-25 text-white small mb-4" role="alert" style="border-left: 4px solid #10b981 !important;">
+                    <i class="bi bi-check-circle-fill me-2 text-success"></i> <span th:text="${logoutMessage}"></span>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show border-0 bg-success bg-opacity-25 text-white small mb-4" role="alert" style="border-left: 4px solid #10b981 !important;">
+                    <i class="bi bi-person-check-fill me-2 text-success"></i> <span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Login Form -->
+                <form th:action="@{/login}" method="post" id="loginForm">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">Email or Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                            <input type="text" name="username" id="usernameInput" class="form-control" placeholder="e.g. member@example.com" required autofocus autocomplete="username">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-shield-lock-fill"></i></span>
+                            <input type="password" name="password" id="passwordInput" class="form-control border-end-0" placeholder="••••••••" required autocomplete="current-password">
+                            <button type="button" class="input-group-text bg-transparent border-start-0 text-secondary" id="togglePasswordBtn" title="Show/Hide Password">
+                                <i class="bi bi-eye" id="toggleEyeIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input bg-dark border-secondary" type="checkbox" name="remember-me" id="rememberMe" checked>
+                            <label class="form-check-label text-secondary small" for="rememberMe">
+                                Stay signed in
+                            </label>
+                        </div>
+                        <a th:href="@{/register}" class="text-decoration-none small" style="color: #D4145A;">New athlete? Register &rarr;</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-red w-100 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-box-arrow-in-right"></i> Sign In to Portal
+                    </button>
+                </form>
+
+                <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <a th:href="@{/}" class="text-decoration-none text-secondary small hover-white">
+                        <i class="bi bi-arrow-left me-1"></i> Return to Home
+                    </a>
+                    <a th:href="@{/register}" class="text-decoration-none small" style="color: #D4145A;">
+                        Create Athlete Account &rarr;
+                    </a>
+                </div>
+
             </div>
 
-            <p class="text-center text-muted small mt-4">
-                &copy; Get U Fit Gym, Colombo &bull; 195 2/3, Galle - Colombo Rd
+            <p class="text-center text-secondary small mt-4" style="font-size:0.78rem;">
+                Get U Fit Gym Colombo &bull; 195 2/3, Galle - Colombo Rd &bull; Open 24/7
             </p>
 
         </div>
@@ -107,9 +188,23 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function fillDemo(username, password) {
-        document.getElementById('usernameInput').value = username;
-        document.getElementById('passwordInput').value = password;
+    // Toggle Password Visibility
+    const toggleBtn = document.getElementById('togglePasswordBtn');
+    const pwdInput = document.getElementById('passwordInput');
+    const eyeIcon = document.getElementById('toggleEyeIcon');
+
+    if (toggleBtn && pwdInput) {
+        toggleBtn.addEventListener('click', function() {
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                eyeIcon.classList.remove('bi-eye');
+                eyeIcon.classList.add('bi-eye-slash');
+            } else {
+                pwdInput.type = 'password';
+                eyeIcon.classList.remove('bi-eye-slash');
+                eyeIcon.classList.add('bi-eye');
+            }
+        });
     }
 </script>
 </body>

@@ -10,9 +10,9 @@ import java.util.Optional;
 @Repository
 public interface MemberProgressRepository extends JpaRepository<MemberProgress, Long> {
 
-    List<MemberProgress> findByMemberIdOrderByRecordDateDesc(Long memberId);
+    List<MemberProgress> findByMemberIdOrderByRecordDateDescIdDesc(Long memberId);
 
-    Optional<MemberProgress> findTopByMemberIdOrderByRecordDateDesc(Long memberId);
+    Optional<MemberProgress> findTopByMemberIdOrderByRecordDateDescIdDesc(Long memberId);
 
     long countByMemberId(Long memberId);
 }

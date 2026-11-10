@@ -1,6 +1,8 @@
 package com.gym.management.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -25,17 +27,25 @@ public class MemberProgress {
     private LocalDate recordDate = LocalDate.now();
 
     @NotNull(message = "Weight is required")
+    @DecimalMin(value = "20.0", message = "Weight must be at least 20 kg")
+    @DecimalMax(value = "350.0", message = "Weight cannot exceed 350 kg")
     @Column(nullable = false)
     private Double weightKg;
 
     @NotNull(message = "Height is required")
+    @DecimalMin(value = "80.0", message = "Height must be at least 80 cm")
+    @DecimalMax(value = "250.0", message = "Height cannot exceed 250 cm")
     @Column(nullable = false)
     private Double heightCm;
 
     private String bodyType; // e.g. Ectomorph, Mesomorph, Endomorph, Athletic
 
+    @DecimalMin(value = "0.0", message = "Workout hours cannot be negative")
+    @DecimalMax(value = "100.0", message = "Workout hours cannot exceed 100 hrs/week")
     private Double workoutHoursPerWeek;
 
+    @DecimalMin(value = "3.0", message = "Body fat percentage must be at least 3%")
+    @DecimalMax(value = "60.0", message = "Body fat percentage cannot exceed 60%")
     private Double bodyFatPercentage;
 
     private String targetGoal; // e.g. Muscle Gain, Fat Loss, Endurance, General Fitness

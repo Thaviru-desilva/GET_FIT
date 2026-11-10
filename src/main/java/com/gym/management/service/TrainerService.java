@@ -26,7 +26,22 @@ public class TrainerService {
         return trainerRepository.findById(id);
     }
 
+    public boolean existsByEmail(String email) {
+        if (email == null || email.trim().isEmpty()) return false;
+        return trainerRepository.existsByEmailIgnoreCase(email.trim());
+    }
+
+    public boolean isEmailTakenByOtherTrainer(String email, Long trainerId) {
+        if (email == null || email.trim().isEmpty()) return false;
+        return trainerRepository.findByEmailIgnoreCase(email.trim())
+                .map(t -> !t.getId().equals(trainerId))
+                .orElse(false);
+    }
+
     public Trainer save(Trainer trainer) {
+        if (trainer.getEmail() != null) {
+            trainer.setEmail(trainer.getEmail().trim().toLowerCase());
+        }
         return trainerRepository.save(trainer);
     }
 

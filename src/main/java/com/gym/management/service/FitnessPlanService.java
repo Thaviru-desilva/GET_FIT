@@ -35,6 +35,15 @@ public class FitnessPlanService {
 
     // Workout Plans
     public WorkoutPlan saveWorkoutPlan(WorkoutPlan plan) {
+        if ("ACTIVE".equalsIgnoreCase(plan.getStatus()) && plan.getMember() != null && plan.getMember().getId() != null) {
+            List<WorkoutPlan> existingPlans = workoutPlanRepository.findByMemberIdOrderByCreatedAtDesc(plan.getMember().getId());
+            for (WorkoutPlan existing : existingPlans) {
+                if ("ACTIVE".equalsIgnoreCase(existing.getStatus()) && (plan.getId() == null || !existing.getId().equals(plan.getId()))) {
+                    existing.setStatus("SUPERSEDED");
+                    workoutPlanRepository.save(existing);
+                }
+            }
+        }
         return workoutPlanRepository.save(plan);
     }
 
@@ -60,6 +69,15 @@ public class FitnessPlanService {
 
     // Diet Plans
     public DietPlan saveDietPlan(DietPlan plan) {
+        if ("ACTIVE".equalsIgnoreCase(plan.getStatus()) && plan.getMember() != null && plan.getMember().getId() != null) {
+            List<DietPlan> existingPlans = dietPlanRepository.findByMemberIdOrderByCreatedAtDesc(plan.getMember().getId());
+            for (DietPlan existing : existingPlans) {
+                if ("ACTIVE".equalsIgnoreCase(existing.getStatus()) && (plan.getId() == null || !existing.getId().equals(plan.getId()))) {
+                    existing.setStatus("SUPERSEDED");
+                    dietPlanRepository.save(existing);
+                }
+            }
+        }
         return dietPlanRepository.save(plan);
     }
 

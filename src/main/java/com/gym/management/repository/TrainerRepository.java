@@ -10,4 +10,8 @@ import java.util.List;
 public interface TrainerRepository extends JpaRepository<Trainer, Long> {
 
     List<Trainer> findBySpecializationContainingIgnoreCase(String specialization);
+
+    java.util.Optional<Trainer> findByEmailIgnoreCase(String email);
+
+    boolean existsByEmailIgnoreCase(String email);
 }

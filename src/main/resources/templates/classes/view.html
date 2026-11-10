@@ -59,6 +59,7 @@
                 </div>
                 <div class="card-body p-3">
                     <form th:action="@{'/classes/book/' + ${gymClass.id}}" method="post" class="row g-2 align-items-center">
+                        <input type="hidden" name="redirectUrl" th:value="'/classes/view/' + ${gymClass.id}">
                         <div class="col-md-9 col-sm-8">
                             <select name="memberId" class="form-select" required>
                                 <option value="" disabled selected>-- Choose member from directory to register --</option>

@@ -25,6 +25,7 @@ public class DataInitializer implements CommandLineRunner {
     private final DietPlanRepository dietPlanRepository;
     private final GymResourceRepository resourceRepository;
     private final ResourceBookingRepository resourceBookingRepository;
+    private final WorkoutSlotBookingRepository workoutSlotBookingRepository;
     private final UserService userService;
 
     public DataInitializer(TrainerRepository trainerRepository,
@@ -39,6 +40,7 @@ public class DataInitializer implements CommandLineRunner {
                            DietPlanRepository dietPlanRepository,
                            GymResourceRepository resourceRepository,
                            ResourceBookingRepository resourceBookingRepository,
+                           WorkoutSlotBookingRepository workoutSlotBookingRepository,
                            UserService userService) {
         this.trainerRepository = trainerRepository;
         this.planRepository = planRepository;
@@ -52,6 +54,7 @@ public class DataInitializer implements CommandLineRunner {
         this.dietPlanRepository = dietPlanRepository;
         this.resourceRepository = resourceRepository;
         this.resourceBookingRepository = resourceBookingRepository;
+        this.workoutSlotBookingRepository = workoutSlotBookingRepository;
         this.userService = userService;
     }
 
@@ -304,5 +307,16 @@ public class DataInitializer implements CommandLineRunner {
         ResourceBooking rb2 = new ResourceBooking(gr3, m1, t1, now, LocalTime.of(17, 30), LocalTime.of(18, 30), "Cable Chest Flyes & Lat Pull-in");
         ResourceBooking rb3 = new ResourceBooking(gr6, m3, null, now, LocalTime.of(18, 0), LocalTime.of(19, 0), "Private Mobility & Core Workout");
         resourceBookingRepository.saveAll(List.of(rb1, rb2, rb3));
+
+        // 13. Seed Workout Slot Reservations for Anti-Overcrowding System
+        WorkoutSlotBooking wsb1 = new WorkoutSlotBooking(m1, now, LocalTime.of(18, 0), LocalTime.of(19, 0), WorkoutFocus.LEGS, "Heavy Squat Progression");
+        WorkoutSlotBooking wsb2 = new WorkoutSlotBooking(m2, now, LocalTime.of(18, 0), LocalTime.of(19, 0), WorkoutFocus.LEGS, "Leg Press & Hamstring focus");
+        WorkoutSlotBooking wsb3 = new WorkoutSlotBooking(m3, now, LocalTime.of(18, 0), LocalTime.of(19, 0), WorkoutFocus.LEGS, "Quad Hypertrophy Routine");
+        WorkoutSlotBooking wsb4 = new WorkoutSlotBooking(m4, now, LocalTime.of(18, 0), LocalTime.of(19, 0), WorkoutFocus.LEGS, "Barbell Lunges & Glute Bridge");
+        WorkoutSlotBooking wsb5 = new WorkoutSlotBooking(m2, now, LocalTime.of(9, 0), LocalTime.of(10, 0), WorkoutFocus.PUSH, "Incline DB Press & Triceps");
+        WorkoutSlotBooking wsb6 = new WorkoutSlotBooking(m3, now.plusDays(1), LocalTime.of(18, 0), LocalTime.of(19, 0), WorkoutFocus.LEGS, "Reserved slot");
+        WorkoutSlotBooking wsb7 = new WorkoutSlotBooking(m4, now.plusDays(1), LocalTime.of(18, 0), LocalTime.of(19, 0), WorkoutFocus.LEGS, "Squat Day");
+
+        workoutSlotBookingRepository.saveAll(List.of(wsb1, wsb2, wsb3, wsb4, wsb5, wsb6, wsb7));
     }
 }

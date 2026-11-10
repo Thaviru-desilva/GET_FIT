@@ -78,8 +78,26 @@ public class GymResourceService {
             throw new IllegalStateException("Resource '" + resource.getName() + "' is currently under maintenance.");
         }
 
-        if (resource.getAvailableQuantity() <= 0) {
-            throw new IllegalStateException("All units of '" + resource.getName() + "' are currently reserved or in use.");
+        if (startTime == null) startTime = LocalTime.now().withSecond(0).withNano(0);
+        if (endTime == null) endTime = startTime.plusMinutes(60);
+        if (date == null) date = LocalDate.now();
+
+        boolean isToday = date.isEqual(LocalDate.now());
+
+        if (isToday) {
+            if (resource.getAvailableQuantity() <= 0) {
+                throw new IllegalStateException("All units of '" + resource.getName() + "' are currently reserved or in use for today.");
+            }
+        } else {
+            final LocalTime slotStart = startTime;
+            final LocalTime slotEnd = endTime;
+            long overlapping = bookingRepository.findByResourceIdAndBookingDateAndStatus(resourceId, date, "CONFIRMED")
+                    .stream()
+                    .filter(b -> slotStart.isBefore(b.getEndTime()) && slotEnd.isAfter(b.getStartTime()))
+                    .count();
+            if (overlapping >= resource.getTotalQuantity()) {
+                throw new IllegalStateException("All " + resource.getTotalQuantity() + " units of '" + resource.getName() + "' are already booked for this time slot on " + date + ".");
+            }
         }
 
         Member member = null;
@@ -92,33 +110,39 @@ public class GymResourceService {
             trainer = trainerRepository.findById(trainerId).orElse(null);
         }
 
-        if (startTime == null) startTime = LocalTime.now().withSecond(0).withNano(0);
-        if (endTime == null) endTime = startTime.plusMinutes(60);
-        if (date == null) date = LocalDate.now();
-
         ResourceBooking booking = new ResourceBooking(resource, member, trainer, date, startTime, endTime, purpose);
         booking = bookingRepository.save(booking);
 
-        // Adjust available inventory
-        resource.setAvailableQuantity(resource.getAvailableQuantity() - 1);
-        if (resource.getAvailableQuantity() == 0) {
-            resource.setStatus("IN_USE");
+        // Adjust live floor inventory only for bookings scheduled for TODAY
+        if (isToday) {
+            resource.setAvailableQuantity(Math.max(0, resource.getAvailableQuantity() - 1));
+            if (resource.getAvailableQuantity() == 0) {
+                resource.setStatus("IN_USE");
+            }
+            resourceRepository.save(resource);
         }
-        resourceRepository.save(resource);
 
         return booking;
     }
 
-    public void cancelBooking(Long bookingId) {
+    public void cancelBooking(Long bookingId, Long requestingMemberId, Long requestingTrainerId, boolean isAdmin) {
         ResourceBooking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found with ID: " + bookingId));
+
+        if (!isAdmin) {
+            boolean isAuthorizedMember = requestingMemberId != null && booking.getMember() != null && booking.getMember().getId().equals(requestingMemberId);
+            boolean isAuthorizedTrainer = requestingTrainerId != null && booking.getTrainer() != null && booking.getTrainer().getId().equals(requestTrainerIdOrNull(booking, requestingTrainerId));
+            if (!isAuthorizedMember && !isAuthorizedTrainer) {
+                throw new IllegalStateException("Unauthorized: You can only cancel your own equipment reservations.");
+            }
+        }
 
         if (!"CANCELLED".equalsIgnoreCase(booking.getStatus())) {
             booking.setStatus("CANCELLED");
             bookingRepository.save(booking);
 
             GymResource resource = booking.getResource();
-            if (resource != null) {
+            if (resource != null && booking.getBookingDate() != null && booking.getBookingDate().isEqual(LocalDate.now())) {
                 resource.setAvailableQuantity(Math.min(resource.getTotalQuantity(), resource.getAvailableQuantity() + 1));
                 if ("IN_USE".equalsIgnoreCase(resource.getStatus()) || "RESERVED".equalsIgnoreCase(resource.getStatus())) {
                     resource.setStatus("AVAILABLE");
@@ -126,6 +150,14 @@ public class GymResourceService {
                 resourceRepository.save(resource);
             }
         }
+    }
+
+    private Long requestTrainerIdOrNull(ResourceBooking booking, Long trainerId) {
+        return booking.getTrainer() != null ? booking.getTrainer().getId() : null;
+    }
+
+    public void cancelBooking(Long bookingId) {
+        cancelBooking(bookingId, null, null, true);
     }
 
     public void updateResourceStatus(Long resourceId, String newStatus) {

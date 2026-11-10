@@ -82,11 +82,22 @@ public class GymClassService {
         return bookingRepository.save(newBooking);
     }
 
+    public void cancelBooking(Long bookingId, Long requestingMemberId, boolean isAdminOrStaff) {
+        ClassBooking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Class booking not found with ID: " + bookingId));
+
+        if (!isAdminOrStaff) {
+            if (requestingMemberId == null || booking.getMember() == null || !booking.getMember().getId().equals(requestingMemberId)) {
+                throw new IllegalStateException("Unauthorized: You can only cancel your own class bookings.");
+            }
+        }
+
+        booking.setStatus("CANCELLED");
+        bookingRepository.save(booking);
+    }
+
     public void cancelBooking(Long bookingId) {
-        bookingRepository.findById(bookingId).ifPresent(booking -> {
-            booking.setStatus("CANCELLED");
-            bookingRepository.save(booking);
-        });
+        cancelBooking(bookingId, null, true);
     }
 
     public List<ClassBooking> getMemberBookings(Long memberId) {

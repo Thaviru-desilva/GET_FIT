@@ -54,12 +54,18 @@ public class TrainerPortalController {
 
         List<GymClass> myClasses = gymClassService.findByTrainerId(trainer.getId());
         List<Member> myMembers = trainer.getMembers();
+        List<Member> allMembers = memberService.findAll();
+        List<Member> unassignedMembers = allMembers.stream()
+                .filter(m -> m.getAssignedTrainer() == null)
+                .toList();
         List<WorkoutPlan> myWorkoutPlans = fitnessPlanService.getWorkoutPlansForTrainer(trainer.getId());
         List<DietPlan> myDietPlans = fitnessPlanService.getDietPlansForTrainer(trainer.getId());
 
         model.addAttribute("trainer", trainer);
         model.addAttribute("classes", myClasses);
         model.addAttribute("members", myMembers);
+        model.addAttribute("allMembers", allMembers);
+        model.addAttribute("unassignedMembers", unassignedMembers);
         model.addAttribute("workoutPlansCount", myWorkoutPlans.size());
         model.addAttribute("dietPlansCount", myDietPlans.size());
         model.addAttribute("todayAttendance", attendanceService.getTodayAttendance());
@@ -72,6 +78,23 @@ public class TrainerPortalController {
         model.addAttribute("floorOccupancyPercentage", resourceService.getFloorOccupancyPercentage());
 
         return "trainer/dashboard";
+    }
+
+    // Assign unassigned member to self
+    @PostMapping("/members/{memberId}/assign-self")
+    public String assignMemberToSelf(@PathVariable("memberId") Long memberId,
+                                     Authentication auth,
+                                     RedirectAttributes redirectAttributes) {
+        Trainer trainer = getAuthenticatedTrainer(auth);
+        if (trainer == null) return "redirect:/dashboard";
+
+        memberService.findById(memberId).ifPresent(m -> {
+            m.setAssignedTrainer(trainer);
+            memberService.save(m);
+        });
+
+        redirectAttributes.addFlashAttribute("successMessage", "Athlete assigned to your 1-on-1 coaching roster!");
+        return "redirect:/trainer/dashboard";
     }
 
     // View Member Progress & Plans Management for Trainer
@@ -111,11 +134,42 @@ public class TrainerPortalController {
             model.addAttribute("member", member);
             model.addAttribute("workoutPlan", plan);
             model.addAttribute("latestProgress", progressService.getLatestProgress(memberId).orElse(null));
+            model.addAttribute("isEdit", false);
             return "trainer/workout-plan-form";
         }).orElseGet(() -> {
             redirectAttributes.addFlashAttribute("errorMessage", "Member not found.");
             return "redirect:/trainer/dashboard";
         });
+    }
+
+    // Edit Workout Plan Form
+    @GetMapping("/members/{memberId}/workout-plan/edit/{planId}")
+    public String editWorkoutPlanForm(@PathVariable("memberId") Long memberId,
+                                      @PathVariable("planId") Long planId,
+                                      Authentication auth,
+                                      Model model,
+                                      RedirectAttributes redirectAttributes) {
+        Trainer trainer = getAuthenticatedTrainer(auth);
+        if (trainer == null) return "redirect:/dashboard";
+
+        Member member = memberService.findById(memberId).orElse(null);
+        if (member == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Member not found.");
+            return "redirect:/trainer/dashboard";
+        }
+
+        WorkoutPlan plan = fitnessPlanService.getWorkoutPlanById(planId).orElse(null);
+        if (plan == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Workout plan not found.");
+            return "redirect:/trainer/members/" + memberId + "/plans";
+        }
+
+        model.addAttribute("trainer", trainer);
+        model.addAttribute("member", member);
+        model.addAttribute("workoutPlan", plan);
+        model.addAttribute("latestProgress", progressService.getLatestProgress(memberId).orElse(null));
+        model.addAttribute("isEdit", true);
+        return "trainer/workout-plan-form";
     }
 
     // Save Workout Plan
@@ -139,9 +193,11 @@ public class TrainerPortalController {
             model.addAttribute("trainer", trainer);
             model.addAttribute("member", member);
             model.addAttribute("latestProgress", progressService.getLatestProgress(memberId).orElse(null));
+            model.addAttribute("isEdit", workoutPlan.getId() != null);
             return "trainer/workout-plan-form";
         }
 
+        boolean isUpdate = workoutPlan.getId() != null;
         workoutPlan.setMember(member);
         workoutPlan.setTrainer(trainer);
         if (workoutPlan.getDurationWeeks() != null && workoutPlan.getStartDate() != null) {
@@ -149,7 +205,9 @@ public class TrainerPortalController {
         }
         fitnessPlanService.saveWorkoutPlan(workoutPlan);
 
-        redirectAttributes.addFlashAttribute("successMessage", "Custom exercise plan created successfully for " + member.getFullName() + "!");
+        String msg = isUpdate ? "Custom exercise plan updated successfully for " + member.getFullName() + "!"
+                              : "Custom exercise plan created successfully for " + member.getFullName() + "!";
+        redirectAttributes.addFlashAttribute("successMessage", msg);
         return "redirect:/trainer/members/" + memberId + "/plans";
     }
 
@@ -169,11 +227,42 @@ public class TrainerPortalController {
             model.addAttribute("member", member);
             model.addAttribute("dietPlan", plan);
             model.addAttribute("latestProgress", progressService.getLatestProgress(memberId).orElse(null));
+            model.addAttribute("isEdit", false);
             return "trainer/diet-plan-form";
         }).orElseGet(() -> {
             redirectAttributes.addFlashAttribute("errorMessage", "Member not found.");
             return "redirect:/trainer/dashboard";
         });
+    }
+
+    // Edit Diet Plan Form
+    @GetMapping("/members/{memberId}/diet-plan/edit/{planId}")
+    public String editDietPlanForm(@PathVariable("memberId") Long memberId,
+                                   @PathVariable("planId") Long planId,
+                                   Authentication auth,
+                                   Model model,
+                                   RedirectAttributes redirectAttributes) {
+        Trainer trainer = getAuthenticatedTrainer(auth);
+        if (trainer == null) return "redirect:/dashboard";
+
+        Member member = memberService.findById(memberId).orElse(null);
+        if (member == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Member not found.");
+            return "redirect:/trainer/dashboard";
+        }
+
+        DietPlan plan = fitnessPlanService.getDietPlanById(planId).orElse(null);
+        if (plan == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Diet plan not found.");
+            return "redirect:/trainer/members/" + memberId + "/plans";
+        }
+
+        model.addAttribute("trainer", trainer);
+        model.addAttribute("member", member);
+        model.addAttribute("dietPlan", plan);
+        model.addAttribute("latestProgress", progressService.getLatestProgress(memberId).orElse(null));
+        model.addAttribute("isEdit", true);
+        return "trainer/diet-plan-form";
     }
 
     // Save Diet Plan
@@ -197,14 +286,18 @@ public class TrainerPortalController {
             model.addAttribute("trainer", trainer);
             model.addAttribute("member", member);
             model.addAttribute("latestProgress", progressService.getLatestProgress(memberId).orElse(null));
+            model.addAttribute("isEdit", dietPlan.getId() != null);
             return "trainer/diet-plan-form";
         }
 
+        boolean isUpdate = dietPlan.getId() != null;
         dietPlan.setMember(member);
         dietPlan.setTrainer(trainer);
         fitnessPlanService.saveDietPlan(dietPlan);
 
-        redirectAttributes.addFlashAttribute("successMessage", "Custom nutrition plan created successfully for " + member.getFullName() + "!");
+        String msg = isUpdate ? "Custom nutrition plan updated successfully for " + member.getFullName() + "!"
+                              : "Custom nutrition plan created successfully for " + member.getFullName() + "!";
+        redirectAttributes.addFlashAttribute("successMessage", msg);
         return "redirect:/trainer/members/" + memberId + "/plans";
     }
 
@@ -316,10 +409,11 @@ public class TrainerPortalController {
         if (trainer == null) return "redirect:/dashboard";
 
         try {
-            resourceService.cancelBooking(bookingId);
+            boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            resourceService.cancelBooking(bookingId, null, trainer.getId(), isAdmin);
             redirectAttributes.addFlashAttribute("successMessage", "Reservation cancelled successfully.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error cancelling reservation: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
 
         return "redirect:/trainer/resources";
